@@ -1,0 +1,1147 @@
+import { QUESTIONS } from './questions.js';
+import { ROLE_ICONS, STAT_ICONS, OPTION_ICONS, UI_ICONS, BRAND_ICONS } from './icons.js';
+import { flashClass } from './animations.js';
+import { PRIVACY_CONFIG, orPlaceholder } from '../privacy-config.js';
+
+var TOTAL_LEVELS = QUESTIONS.length;
+
+var AI_TOOL_BRAND_KEYS = {
+  chatgpt: 'chatgpt',
+  claude: 'claude',
+  cursor: 'cursor',
+  copilot: 'githubcopilot',
+  gemini: 'googlegemini',
+  windsurf: 'windsurf'
+};
+
+// ---------- 首頁（生存遊戲版）：品牌、主視覺、報到表單都在同一頁 ----------
+
+var HOME_BRANDS = [
+  { logo: 'assets/brand/hexschool.svg', name: '六角學院' },
+  { logo: 'assets/brand/polygon.svg', name: '多角人才' }
+];
+
+function buildHomeBrands() {
+  var row = createEl('div', 'home-brands');
+  HOME_BRANDS.forEach(function (brand, i) {
+    if (i > 0) {
+      var x = createEl('span', 'home-brands-x');
+      x.textContent = '×';
+      x.setAttribute('aria-hidden', 'true');
+      row.appendChild(x);
+    }
+    var item = createEl('div', 'home-brand');
+    var logo = document.createElement('img');
+    logo.className = 'home-brand-logo';
+    logo.src = brand.logo;
+    logo.alt = '';
+    item.appendChild(logo);
+    var name = createEl('span', 'home-brand-name');
+    name.textContent = brand.name;
+    item.appendChild(name);
+    row.appendChild(item);
+  });
+  return row;
+}
+
+function buildHomeHero() {
+  var hero = createEl('div', 'home-hero');
+  var radar = createEl('div', 'home-hero-radar');
+  radar.setAttribute('aria-hidden', 'true');
+  hero.appendChild(radar);
+  var img = document.createElement('img');
+  img.className = 'home-mascot';
+  img.src = 'assets/mascot/mascot-combat.png';
+  img.alt = '全副武裝的多角龍';
+  hero.appendChild(img);
+  hero.appendChild(createEl('div', 'home-hero-ground'));
+  return hero;
+}
+
+function buildHomeTitle() {
+  var wrap = createEl('div', 'home-title-block');
+  var tag = createEl('p', 'home-mission-tag');
+  tag.textContent = 'SURVIVAL MISSION 2026';
+  var title = createEl('h1', 'home-title');
+  title.textContent = '工程師生存實驗室';
+  var subtitle = createEl('p', 'home-subtitle');
+  subtitle.textContent = 'AI 時代，你是哪一種工程師生存者？';
+  var meta = createEl('p', 'home-meta');
+  ['12 道關卡', '約 90 秒', '解鎖專屬生存卡'].forEach(function (text, i) {
+    if (i > 0) {
+      var dot = createEl('span', 'home-meta-dot');
+      dot.setAttribute('aria-hidden', 'true');
+      meta.appendChild(dot);
+    }
+    meta.appendChild(document.createTextNode(text));
+  });
+  [tag, title, subtitle, meta].forEach(function (el) { wrap.appendChild(el); });
+  return wrap;
+}
+
+function buildHomeField(opts) {
+  var wrap = createEl('div', 'home-field');
+  var row = createEl('label', 'home-field-label');
+  row.setAttribute('for', opts.id);
+  row.appendChild(document.createTextNode(opts.label));
+  var tag = createEl('span', 'home-field-tag' + (opts.required ? ' home-field-tag--required' : ''));
+  tag.textContent = opts.required ? '必填' : '選填';
+  row.appendChild(tag);
+  wrap.appendChild(row);
+
+  var input = document.createElement('input');
+  input.type = opts.type || 'text';
+  input.id = opts.id;
+  input.className = 'home-input';
+  input.placeholder = opts.placeholder;
+  if (opts.maxLength) input.maxLength = opts.maxLength;
+  if (opts.autocomplete) input.autocomplete = opts.autocomplete;
+  wrap.appendChild(input);
+  return { wrap: wrap, input: input };
+}
+
+export function renderIntro(root, handlers) {
+  lastTrailPosition = null;
+  root.innerHTML = '';
+  var screen = createEl('div', 'screen screen--home');
+
+  screen.appendChild(buildHomeBrands());
+
+  var stage = createEl('div', 'home-stage');
+  var lead = createEl('div', 'home-lead');
+  lead.appendChild(buildHomeHero());
+  lead.appendChild(buildHomeTitle());
+  stage.appendChild(lead);
+
+  var card = createEl('div', 'home-card');
+  var cardHead = createEl('div', 'home-card-head');
+  var cardTitle = createEl('h2', 'home-card-title');
+  cardTitle.textContent = '生存者登記';
+  var cardNo = createEl('span', 'home-card-no');
+  cardNo.textContent = 'ID CARD';
+  cardHead.appendChild(cardTitle);
+  cardHead.appendChild(cardNo);
+  card.appendChild(cardHead);
+
+  var error = createEl('p', 'home-error');
+  error.setAttribute('role', 'alert');
+  error.hidden = true;
+
+  var nickname = buildHomeField({
+    id: 'home-nickname',
+    label: '生存代號',
+    placeholder: '輸入暱稱，例如：每天都在 Debug',
+    maxLength: 20,
+    autocomplete: 'nickname'
+  });
+  var email = buildHomeField({
+    id: 'home-email',
+    label: 'Email',
+    required: true,
+    type: 'email',
+    placeholder: 'you@example.com',
+    autocomplete: 'email'
+  });
+  card.appendChild(nickname.wrap);
+  card.appendChild(email.wrap);
+
+  var noticeHost = createEl('div', 'notice-host');
+  var openNotice = function () {
+    var notice = buildPersonalDataNotice(function () {
+      noticeHost.innerHTML = '';
+      document.body.classList.remove('notice-open');
+      privacy.input.focus();
+    });
+    noticeHost.appendChild(notice.overlay);
+    document.body.classList.add('notice-open');
+    notice.done.focus();
+  };
+
+  var privacy = buildConsentCheckbox({
+    parts: ['我已閱讀並了解', { label: '個人資料蒐集告知事項', onClick: openNotice }]
+  });
+  privacy.row.classList.add('consent-row--required');
+  var marketing = buildMarketingConsent();
+  card.appendChild(privacy.row);
+  card.appendChild(marketing.row);
+  card.appendChild(error);
+
+  function submit() {
+    if (!privacy.input.checked) {
+      error.hidden = false;
+      error.textContent = '請先閱讀並勾選個人資料蒐集告知事項';
+      privacy.row.classList.add('consent-row--bad');
+      privacy.input.focus();
+      return;
+    }
+    var problem = handlers.onStart({
+      nickname: nickname.input.value,
+      email: email.input.value,
+      privacyAccepted: true,
+      marketingOptIn: marketing.input.checked
+    });
+    if (!problem) return;
+    error.hidden = false;
+    error.textContent = problem === 'email'
+      ? (email.input.value.trim() ? 'Email 格式看起來不太對，再檢查一下。' : '請留下 Email，這是報到的必要資料。')
+      : '還有欄位需要補一下。';
+    email.input.classList.add('home-input--bad');
+    email.input.focus();
+  }
+
+  [nickname.input, email.input].forEach(function (input) {
+    input.addEventListener('input', function () {
+      input.classList.remove('home-input--bad');
+      error.hidden = true;
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    });
+  });
+  privacy.input.addEventListener('change', function () {
+    privacy.row.classList.remove('consent-row--bad');
+    error.hidden = true;
+  });
+
+  var startBtn = createEl('button', 'home-cta');
+  startBtn.type = 'button';
+  var startLabel = createEl('span', 'home-cta-label');
+  startLabel.textContent = '出發闖關';
+  var startArrow = createEl('span', 'home-cta-arrow');
+  startArrow.innerHTML = UI_ICONS.chevronRight;
+  startBtn.appendChild(startLabel);
+  startBtn.appendChild(startArrow);
+  startBtn.addEventListener('click', submit);
+  card.appendChild(startBtn);
+
+  stage.appendChild(card);
+  screen.appendChild(stage);
+  screen.appendChild(noticeHost);
+  root.appendChild(screen);
+}
+
+function buildConsentCheckbox(opts) {
+  var row = createEl('label', 'consent-row');
+  var input = document.createElement('input');
+  input.type = 'checkbox';
+  input.className = 'consent-box';
+  input.checked = false;          // never pre-ticked
+  row.appendChild(input);
+
+  var body = createEl('span', 'consent-body');
+  var text = createEl('span', 'consent-text');
+  opts.parts.forEach(function (part) {
+    if (typeof part === 'string') {
+      text.appendChild(document.createTextNode(part));
+      return;
+    }
+    // A link inside a <label> would toggle the box, so it is a button that
+    // stops the click from reaching the label.
+    var link = createEl('button', 'consent-link');
+    link.type = 'button';
+    link.textContent = part.label;
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      part.onClick();
+    });
+    text.appendChild(link);
+  });
+  body.appendChild(text);
+  if (opts.tag) {
+    var tag = createEl('span', 'consent-tag');
+    tag.textContent = opts.tag;
+    body.appendChild(tag);
+  }
+  row.appendChild(body);
+  return { row: row, input: input };
+}
+
+function buildMarketingConsent() {
+  return buildConsentCheckbox({
+    parts: ['我願意收到六角課程、學習、活動及職涯相關資訊'],
+    tag: '選填'
+  });
+}
+
+function buildPersonalDataNotice(onClose) {
+  var cfg = PRIVACY_CONFIG;
+  var sharedWith = (cfg.sharedWith || []).filter(function (n) { return n && n.trim(); });
+
+  var overlay = createEl('div', 'notice-overlay');
+  var sheet = createEl('div', 'notice-sheet');
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-modal', 'true');
+  sheet.setAttribute('aria-labelledby', 'notice-heading');
+
+  var header = createEl('div', 'notice-header');
+  var heading = createEl('div', 'notice-heading-group');
+  var h = createEl('h2', 'notice-title');
+  h.id = 'notice-heading';
+  h.textContent = '個人資料蒐集告知事項';
+  var sub = createEl('p', 'notice-subtitle');
+  sub.textContent = 'PERSONAL DATA NOTICE';
+  heading.appendChild(h);
+  heading.appendChild(sub);
+  header.appendChild(heading);
+  var closeBtn = createEl('button', 'notice-close');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', '關閉');
+  closeBtn.innerHTML = UI_ICONS.close;
+  closeBtn.addEventListener('click', onClose);
+  header.appendChild(closeBtn);
+  sheet.appendChild(header);
+
+  var body = createEl('div', 'notice-body');
+
+  function section(title, blocks) {
+    var sec = createEl('section', 'notice-section');
+    var t = createEl('h3', 'notice-section-title');
+    t.textContent = title;
+    sec.appendChild(t);
+    blocks.forEach(function (block) {
+      if (Array.isArray(block)) {
+        var ul = createEl('ul', 'notice-list');
+        block.forEach(function (item) {
+          var li = createEl('li');
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+        sec.appendChild(ul);
+        return;
+      }
+      var p = createEl('p', 'notice-text');
+      p.textContent = block;
+      sec.appendChild(p);
+    });
+    body.appendChild(sec);
+  }
+
+  var intro = createEl('p', 'notice-lead');
+  intro.textContent = '為辦理「2026 工程師生存實驗室」活動及提供相關服務，依個人資料保護法相關規定，向您說明下列事項：';
+  body.appendChild(intro);
+
+  section('一、蒐集單位', [orPlaceholder(cfg.collectorName)]);
+
+  section('二、蒐集目的', ['蒐集資料將用於：', [
+    '辦理「2026 工程師生存實驗室」活動',
+    '活動參與及必要聯繫',
+    '產生個人化工程師生存測驗結果及生存卡',
+    '工程師職涯、工作狀態、AI 使用與相關趨勢之統計分析',
+    '如您另行同意接收相關資訊，將用於寄送工程師學習、課程、講座、活動、職涯發展及相關服務資訊'
+  ]]);
+
+  section('三、蒐集之個人資料類別', ['本活動可能蒐集：', [
+    '暱稱／實驗代號',
+    '電子郵件地址',
+    '本活動問卷及測驗作答資料',
+    '活動參與及系統必要紀錄'
+  ]]);
+
+  section('四、個人資料來源', ['由您本人於「2026 工程師生存實驗室」活動頁面直接提供。']);
+
+  section('五、個人資料利用之期間、地區、對象及方式', [
+    '期間：' + orPlaceholder(cfg.retentionPeriod),
+    '地區：中華民國（臺灣）及提供本服務所必要之資訊系統或雲端服務所在地區。',
+    '對象：' + (sharedWith.length
+      ? sharedWith.join('、') + '，以及為提供本活動、資訊系統、電子郵件寄送等服務所必要之受託服務提供者。'
+      : orPlaceholder(cfg.collectorName) + '，以及為提供本活動、資訊系統、電子郵件寄送等服務所必要之受託服務提供者。'),
+    '方式：以自動化或非自動化方式進行蒐集、處理、統計分析、活動聯繫及其他符合上述蒐集目的之利用。'
+  ]);
+
+  section('六、當事人權利', ['您得依個人資料保護法相關規定，就您的個人資料行使：', [
+    '查詢或請求閱覽',
+    '請求製給複製本',
+    '請求補充或更正',
+    '請求停止蒐集、處理或利用',
+    '請求刪除'
+  ], '如需行使上述權利，請聯絡：' + orPlaceholder(cfg.contactEmail)]);
+
+  section('七、不提供個人資料之影響', [
+    '暱稱為選填；如未提供，系統將以隨機實驗代號顯示於生存卡。',
+    'Email 為本活動所設定之必要資料；如不提供 Email，將無法完成本活動的線上報到及進入測驗。',
+    '是否同意接收工程師課程、學習、活動及職涯相關資訊為自由選擇；不同意不影響您參與本次活動及取得測驗結果。'
+  ]);
+
+  section('八、課程及相關資訊', [
+    '如您另外勾選「我願意收到六角課程、學習、活動及職涯相關資訊」，我們將依您的同意，透過電子郵件寄送相關內容。',
+    '您可以隨時透過電子郵件中的「取消訂閱」功能，或聯絡 ' + orPlaceholder(cfg.contactEmail) + '，停止接收相關資訊。',
+    '取消訂閱不影響您參與本次活動及已取得之生存卡。'
+  ]);
+
+  var updated = createEl('p', 'notice-updated');
+  updated.textContent = '最後更新：' + orPlaceholder(cfg.lastUpdated);
+  body.appendChild(updated);
+
+  sheet.appendChild(body);
+
+  var footer = createEl('div', 'notice-footer');
+  var done = createEl('button', 'btn-notice-done');
+  done.type = 'button';
+  done.textContent = '我已了解並返回';
+  done.addEventListener('click', onClose);
+  footer.appendChild(done);
+  sheet.appendChild(footer);
+
+  overlay.appendChild(sheet);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) onClose();
+  });
+  return { overlay: overlay, sheet: sheet, done: done };
+}
+
+// ---------- 闖關頁 ----------
+
+// 12 題分成三個營地，進度條上用較大的節點標出營地起點。
+var CAMPS = [
+  { name: '職場現況', from: 1, to: 6 },
+  { name: '職涯卡點', from: 7, to: 7, boss: true },
+  { name: 'AI 生存', from: 8, to: 12 }
+];
+
+// The trail is rebuilt on every render, so the walker remembers where it was
+// drawn last time and slides from there to its new checkpoint.
+var lastTrailPosition = null;
+
+function campFor(level) {
+  return CAMPS.filter(function (camp) { return level >= camp.from && level <= camp.to; })[0] || CAMPS[0];
+}
+
+function trailPercent(position) {
+  // checkpoints 1..12 sit between 0% and 92%; the finish flag owns 100%
+  return ((position - 1) / (TOTAL_LEVELS - 1)) * 92;
+}
+
+function buildTrail(question, state) {
+  var trail = createEl('div', 'trail');
+  var camp = campFor(question.level);
+  var campIndex = CAMPS.filter(function (c) { return !c.boss; }).indexOf(camp) + 1;
+
+  var meta = createEl('div', 'trail-meta');
+  var campLabel = createEl('span', 'trail-camp');
+  campLabel.textContent = (camp.boss ? 'BOSS 關' : '營地 ' + campIndex) + '・' + camp.name;
+  var count = createEl('span', 'trail-count');
+  count.textContent = 'LEVEL ' + pad2(question.level) + ' / ' + TOTAL_LEVELS;
+  meta.appendChild(campLabel);
+  meta.appendChild(count);
+  trail.appendChild(meta);
+
+  // While a single answer plays out, the walker already heads for the next
+  // checkpoint so the move reads as the result of answering.
+  var position = question.level + (state.isAdvancing && question.level < TOTAL_LEVELS ? 1 : 0);
+
+  var track = createEl('div', 'trail-track');
+  track.setAttribute('aria-hidden', 'true');
+  var line = createEl('div', 'trail-line');
+  var fill = createEl('div', 'trail-line-fill');
+  fill.style.width = trailPercent(position) + '%';
+  line.appendChild(fill);
+  track.appendChild(line);
+
+  for (var level = 1; level <= TOTAL_LEVELS; level++) {
+    var node = createEl('span', 'trail-node');
+    var campStart = CAMPS.filter(function (c) { return c.from === level; })[0];
+    if (campStart) node.classList.add(campStart.boss ? 'trail-node--boss' : 'trail-node--camp');
+    if (level < position) node.classList.add('trail-node--done');
+    if (level === position) node.classList.add('trail-node--current');
+    node.style.left = trailPercent(level) + '%';
+    track.appendChild(node);
+  }
+
+  var flag = buildIconSpan(UI_ICONS.flag, 'trail-flag');
+  track.appendChild(flag);
+
+  var walker = document.createElement('img');
+  walker.className = 'trail-walker';
+  walker.src = 'assets/mascot/mascot-walk.png';
+  walker.alt = '';
+  var from = lastTrailPosition === null ? position : lastTrailPosition;
+  walker.style.left = trailPercent(from) + '%';
+  track.appendChild(walker);
+  if (from !== position) {
+    walker.classList.add('trail-walker--moving');
+    if (position < from) walker.classList.add('trail-walker--back');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { walker.style.left = trailPercent(position) + '%'; });
+    });
+    setTimeout(function () { walker.classList.remove('trail-walker--moving'); }, 560);
+  }
+  lastTrailPosition = position;
+
+  trail.appendChild(track);
+  return trail;
+}
+
+export function renderLevel(root, question, state, handlers) {
+  root.innerHTML = '';
+  var screen = createEl('div', 'screen screen--level');
+  screen.appendChild(buildTrail(question, state));
+
+  var prompt = createEl('h2', 'level-prompt');
+  prompt.textContent = question.prompt;
+  screen.appendChild(prompt);
+
+  if (question.subtitle) {
+    var subtitle = createEl('p', 'level-subtitle');
+    subtitle.textContent = question.subtitle;
+    screen.appendChild(subtitle);
+  }
+
+  screen.appendChild(buildOptionsGrid(question, state, handlers));
+
+  if (state.levelIndex > 0) {
+    var backBtn = createEl('button', 'btn-back');
+    backBtn.type = 'button';
+    backBtn.textContent = '← 上一題';
+    backBtn.disabled = Boolean(state.isAdvancing);
+    backBtn.addEventListener('click', handlers.onBack);
+    screen.appendChild(backBtn);
+  }
+
+  if (question.type === 'multi') {
+    var selected = state.answers[question.id] || [];
+    var verb = question.visualStyle === 'bugs' ? '已鎖定' : '已選';
+    var bar = createEl('div', 'level-actions');
+    var nextBtn = createEl('button', 'btn-hazard');
+    nextBtn.type = 'button';
+    nextBtn.textContent = selected.length > 0
+      ? '下一關（' + verb + ' ' + selected.length + '/' + question.maxSelections + '）'
+      : '略過這題';
+    nextBtn.addEventListener('click', handlers.onMultiNext);
+    bar.appendChild(nextBtn);
+    screen.appendChild(bar);
+  }
+
+  root.appendChild(screen);
+}
+
+function buildOptionsGrid(question, state, handlers) {
+  var isMulti = question.type === 'multi';
+  var isSniper = question.visualStyle === 'bugs';
+  var selectedValue = state.answers[question.id];
+  var selectedValues = isMulti ? (state.answers[question.id] || []) : [];
+  var isFull = isMulti && question.maxSelections && selectedValues.length >= question.maxSelections;
+  var isLadder = question.layout === 'ladder';
+  var grid = createEl('div', 'options-grid options-grid--' + question.visualStyle + (isLadder ? ' options-grid--ladder' : ''));
+  var maxRank = isLadder
+    ? Math.max.apply(null, question.options.map(function (o) { return o.rank || 0; }))
+    : 0;
+  var dividerAdded = false;
+
+  question.options.forEach(function (option) {
+    // Answers that sit outside the scale (秘密, 公司不給用…) go under a divider
+    // so they do not read as the top or bottom rung.
+    if (isLadder && option.offScale && !dividerAdded) {
+      var divider = createEl('div', 'options-divider');
+      divider.setAttribute('aria-hidden', 'true');
+      grid.appendChild(divider);
+      dividerAdded = true;
+    }
+
+    var isSelected = isMulti
+      ? selectedValues.indexOf(option.value) !== -1
+      : selectedValue === option.value;
+    var isExclusive = question.exclusiveOption === option.value;
+
+    var classNames = ['option-card'];
+    if (isSelected) {
+      classNames.push(isSniper ? (isExclusive ? 'option-card--clear' : 'option-card--locked') : 'option-card--selected');
+    } else if (isFull && !isExclusive) {
+      classNames.push('option-card--maxed');
+    }
+
+    var btn = createEl('button', classNames.join(' '));
+    btn.type = 'button';
+    btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    // Locked only while the answer animation plays, so a double tap cannot
+    // skip a level. Keying this off the stored answer instead would leave the
+    // options dead after stepping back to change one.
+    btn.disabled = !isMulti && Boolean(state.isAdvancing);
+
+    var isAiToolsBrand = question.id === 'aiTools';
+    var iconMarkup = question.id === 'role'
+      ? ROLE_ICONS[option.value]
+      : isAiToolsBrand
+        ? (BRAND_ICONS[AI_TOOL_BRAND_KEYS[option.value]] ||
+           (option.value === 'other' ? UI_ICONS.settings : option.value === 'none' ? UI_ICONS.moreHorizontal : null))
+        : OPTION_ICONS[question.id + ':' + option.value];
+    var visual = createEl('span', 'option-visual');
+    if (option.image) {
+      var optionImg = document.createElement('img');
+      optionImg.className = 'option-image';
+      optionImg.src = option.image;
+      optionImg.alt = '';
+      visual.appendChild(optionImg);
+    } else if (iconMarkup) {
+      var icon = createEl('span', isAiToolsBrand ? 'option-icon option-icon--brand' : 'option-icon');
+      icon.innerHTML = iconMarkup;
+      visual.appendChild(icon);
+    } else {
+      var emoji = createEl('span', 'option-emoji');
+      emoji.textContent = option.emoji;
+      visual.appendChild(emoji);
+    }
+    if (isSniper && isSelected && !isExclusive) {
+      visual.appendChild(buildCrosshair());
+    }
+    btn.appendChild(visual);
+
+    var label = createEl('span', 'option-label');
+    label.textContent = option.label;
+    btn.appendChild(label);
+
+    if (isLadder && option.rank) {
+      var meter = createEl('span', 'option-meter');
+      meter.setAttribute('aria-hidden', 'true');
+      for (var r = 1; r <= maxRank; r++) {
+        meter.appendChild(createEl('span', r <= option.rank ? 'option-meter-on' : ''));
+      }
+      btn.appendChild(meter);
+    }
+
+    if (isSelected && isMulti) {
+      var stamp = createEl('span', 'option-stamp');
+      stamp.textContent = isSniper ? (isExclusive ? '安全' : '已鎖定') : '';
+      if (!isSniper) stamp.innerHTML = UI_ICONS.check;
+      btn.appendChild(stamp);
+    }
+
+    btn.addEventListener('click', function () {
+      if (isMulti) {
+        handlers.onMultiToggle(option.value);
+      } else {
+        handlers.onSingleSelect(option.value);
+      }
+    });
+
+    grid.appendChild(btn);
+  });
+
+  return grid;
+}
+
+function buildCrosshair() {
+  var reticle = createEl('span', 'option-reticle');
+  reticle.setAttribute('aria-hidden', 'true');
+  reticle.innerHTML =
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">' +
+    '<circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="3" fill="currentColor"/>' +
+    '<path d="M32 2v14M32 48v14M2 32h14M48 32h14"/>' +
+    '</svg>';
+  return reticle;
+}
+
+function createEl(tag, className) {
+  var el = document.createElement(tag);
+  if (className) el.className = className;
+  return el;
+}
+
+function pad2(n) {
+  return n < 10 ? '0' + n : String(n);
+}
+
+function buildIconSpan(svgMarkup, className) {
+  var span = createEl('span', className);
+  span.innerHTML = svgMarkup;
+  return span;
+}
+
+// ---------- 分析中 ----------
+
+var CALCULATING_ITEMS = ['工作穩定度', 'AI 適應度', '職涯卡點', '轉職雷達', '2027 任務'];
+var CALCULATING_STAGGER_MS = 250;
+
+export function renderCalculating(root) {
+  lastTrailPosition = null;
+  root.innerHTML = '';
+  var screen = createEl('div', 'screen screen--calculating');
+
+  var radar = createEl('div', 'calc-radar');
+  radar.setAttribute('aria-hidden', 'true');
+  var radarImg = document.createElement('img');
+  radarImg.src = 'assets/mascot/mascot-combat.png';
+  radarImg.alt = '';
+  radar.appendChild(radarImg);
+  screen.appendChild(radar);
+
+  var tag = createEl('p', 'calc-tag');
+  tag.textContent = 'SCANNING';
+  screen.appendChild(tag);
+
+  var text = createEl('p', 'calculating-text');
+  text.textContent = '分析你的工程師生存數據中……';
+  screen.appendChild(text);
+
+  var checklist = createEl('div', 'calculating-checklist');
+  CALCULATING_ITEMS.forEach(function (label, i) {
+    var item = createEl('div', 'calculating-item');
+    item.style.animationDelay = (i * CALCULATING_STAGGER_MS) + 'ms';
+    var labelEl = createEl('span');
+    labelEl.textContent = label;
+    var check = createEl('span', 'calculating-check');
+    check.textContent = 'OK';
+    check.style.animationDelay = (i * CALCULATING_STAGGER_MS + 150) + 'ms';
+    item.appendChild(labelEl);
+    item.appendChild(check);
+    checklist.appendChild(item);
+  });
+  screen.appendChild(checklist);
+
+  var track = createEl('div', 'progress-track');
+  var fill = createEl('div', 'progress-fill progress-fill--animated');
+  track.appendChild(fill);
+  screen.appendChild(track);
+  root.appendChild(screen);
+}
+
+// ---------- 生存報告 ----------
+
+function applyPersonaColors(el, persona) {
+  el.style.setProperty('--persona-accent', persona.accent);
+  el.style.setProperty('--persona-accent-strong', persona.accentStrong);
+  el.style.setProperty('--persona-glow', persona.accentGlow);
+}
+
+export function renderResult(root, data, handlers) {
+  root.innerHTML = '';
+  var screen = createEl('div', 'screen screen--result');
+  applyPersonaColors(screen, data.persona);
+  var card = createEl('div', 'result-card');
+
+  var hero = createEl('div', 'result-hero');
+  hero.appendChild(createEl('div', 'result-hero-radar'));
+  var mascot = document.createElement('img');
+  mascot.className = 'result-mascot';
+  mascot.src = data.persona.mascotImage;
+  mascot.alt = data.persona.name + '的多角龍';
+  hero.appendChild(mascot);
+
+  var greeting = createEl('p', 'result-greeting');
+  greeting.textContent = data.nickname + '，你的生存報告出爐了';
+
+  var badge = createEl('div', 'result-badge');
+  badge.textContent = 'SURVIVAL TYPE';
+
+  var name = createEl('h2', 'result-name');
+  name.textContent = data.persona.name;
+
+  var englishName = createEl('p', 'result-english-name');
+  englishName.textContent = data.persona.englishName;
+
+  var scoreBlock = createEl('div', 'result-score');
+  var scoreHead = createEl('div', 'result-score-head');
+  var scoreLabel = createEl('p', 'result-score-label');
+  scoreLabel.textContent = 'SURVIVAL SCORE';
+  var scoreNumberRow = createEl('div', 'result-score-number-row');
+  var scoreNumber = createEl('span', 'result-score-number');
+  scoreNumber.textContent = '0';
+  var scoreMax = createEl('span', 'result-score-max');
+  scoreMax.textContent = '/100';
+  scoreNumberRow.appendChild(scoreNumber);
+  scoreNumberRow.appendChild(scoreMax);
+  scoreHead.appendChild(scoreLabel);
+  scoreHead.appendChild(scoreNumberRow);
+  var indexBar = buildSegmentBar(0, 'segment-bar--lg');
+  scoreBlock.appendChild(scoreHead);
+  scoreBlock.appendChild(indexBar);
+
+  setTimeout(function () {
+    lightSegments(indexBar, data.survivalIndex / 100);
+    animateCountUp(scoreNumber, data.survivalIndex, 900);
+  }, 30);
+
+  var stats = createEl('div', 'result-stats');
+  stats.appendChild(buildStatRow('heart', '工作穩定度', data.dimensions.stability));
+  stats.appendChild(buildStatRow('cpu', 'AI 適應度', data.dimensions.aiAdapt));
+  stats.appendChild(buildStatRow('radar', '轉職雷達', data.dimensions.radar));
+  stats.appendChild(buildStatRow('bug', '職涯卡點指數', data.dimensions.careerBugIndex));
+
+  var insightHero = buildInsightHero(data.persona.highlight);
+
+  var insightGrid = createEl('div', 'result-insight-grid');
+  insightGrid.appendChild(buildInsightCard('crosshair', 'CORE DRIVE', data.persona.deepDive.motivationTitle, data.persona.deepDive.motivation));
+  insightGrid.appendChild(buildInsightCard('triangleAlert', 'RISK', data.persona.deepDive.riskTitle, data.persona.deepDive.risk));
+  insightGrid.appendChild(buildInsightCard('moveUpRight', 'NEXT MOVE', data.persona.deepDive.actionTitle, data.persona.deepDive.action));
+
+  var statusGrid = createEl('div', 'result-status-grid');
+  var bugCard = buildStatusCard('bug', 'bug', 'BUG DETECTED', data.careerBugLabel || '目前沒什麼 Bug', data.careerBugImage);
+  // Up to three bugs can be picked; two or more need the full row to fit.
+  if ((data.careerBugLabel || '').indexOf('、') !== -1) {
+    bugCard.classList.add('result-status-card--wide');
+  }
+  statusGrid.appendChild(bugCard);
+  statusGrid.appendChild(buildStatusCard('cpu', 'ai', 'AI STATUS', data.aiBuffLabel));
+
+  var mission = buildMissionCard(data.goalLabel, data.goalImage);
+  var course = buildCourseCard(data.course, '先推薦你這門課');
+
+  // Course sits right after the deep-dive analysis: the cards above end on
+  // 建議行動, so the suggestion follows straight on from it instead of
+  // trailing after the 2027 mission, which closes the card.
+  [hero, greeting, badge, name, englishName, scoreBlock, stats, insightHero, insightGrid, course, statusGrid, mission].forEach(function (el) { card.appendChild(el); });
+  screen.appendChild(card);
+
+  var restartBtn = createEl('button', 'btn-text');
+  restartBtn.type = 'button';
+  restartBtn.textContent = '重新測一次';
+  restartBtn.addEventListener('click', handlers.onRestart);
+  screen.appendChild(restartBtn);
+
+  // The report runs about three screens tall on a phone, so the booth mission
+  // rides along at the bottom of the viewport the whole way down.
+  var actions = createEl('div', 'result-actions');
+  var hint = createEl('p', 'result-actions-hint');
+  hint.textContent = '最後一步：分享生存卡給朋友，完成闖關任務';
+  var shareBtn = createEl('button', 'btn-hazard');
+  shareBtn.type = 'button';
+  shareBtn.textContent = '產生我的生存卡';
+  shareBtn.addEventListener('click', handlers.onShare);
+  actions.appendChild(hint);
+  actions.appendChild(shareBtn);
+  screen.appendChild(actions);
+
+  root.appendChild(screen);
+}
+
+function buildSegmentBar(ratio, extraClass) {
+  var bar = createEl('div', 'segment-bar' + (extraClass ? ' ' + extraClass : ''));
+  for (var i = 0; i < 20; i++) bar.appendChild(createEl('span', 'segment'));
+  lightSegments(bar, ratio);
+  return bar;
+}
+
+function lightSegments(bar, ratio) {
+  var lit = Math.round(20 * Math.max(0, Math.min(1, ratio)));
+  Array.prototype.forEach.call(bar.children, function (seg, i) {
+    seg.style.transitionDelay = (i * 25) + 'ms';
+    seg.classList.toggle('segment--on', i < lit);
+  });
+}
+
+function buildStatRow(iconKey, label, value) {
+  var percent = Math.round((value / 5) * 100);
+  var row = createEl('div', 'stat-row');
+  row.appendChild(buildIconSpan(STAT_ICONS[iconKey], 'stat-icon'));
+
+  var info = createEl('div', 'stat-info');
+  var labelRow = createEl('div', 'stat-label-row');
+  var labelEl = createEl('span', 'stat-label');
+  labelEl.textContent = label;
+  var percentEl = createEl('span', 'stat-percent');
+  percentEl.textContent = percent + '%';
+  labelRow.appendChild(labelEl);
+  labelRow.appendChild(percentEl);
+
+  info.appendChild(labelRow);
+  info.appendChild(buildSegmentBar(percent / 100));
+  row.appendChild(info);
+  return row;
+}
+
+function buildInsightHero(headline) {
+  var hero = createEl('div', 'result-insight-hero');
+  var eyebrow = createEl('p', 'result-insight-hero-eyebrow');
+  eyebrow.textContent = 'YOUR INSIGHT';
+  var text = createEl('p', 'result-insight-hero-text');
+  text.textContent = headline;
+  hero.appendChild(eyebrow);
+  hero.appendChild(text);
+  return hero;
+}
+
+function buildInsightCard(iconKey, eyebrow, title, description) {
+  var card = createEl('div', 'result-insight-card');
+  var iconBox = createEl('div', 'result-insight-icon');
+  iconBox.appendChild(buildIconSpan(STAT_ICONS[iconKey], 'result-insight-icon-svg'));
+  var eyebrowEl = createEl('p', 'result-insight-eyebrow');
+  eyebrowEl.textContent = eyebrow;
+  var titleEl = createEl('p', 'result-insight-title');
+  titleEl.textContent = title;
+  var descEl = createEl('p', 'result-insight-desc');
+  descEl.textContent = description;
+  var body = createEl('div', 'result-insight-body');
+  body.appendChild(eyebrowEl);
+  body.appendChild(titleEl);
+  body.appendChild(descEl);
+  card.appendChild(iconBox);
+  card.appendChild(body);
+  return card;
+}
+
+function buildStatusCard(iconKey, variant, eyebrow, text, image) {
+  var card = createEl('div', 'result-status-card result-status-card--' + variant);
+  var iconBox = createEl('div', 'result-status-icon');
+  if (image) {
+    var img = document.createElement('img');
+    img.className = 'result-status-icon-image';
+    img.src = image;
+    img.alt = '';
+    iconBox.appendChild(img);
+  } else {
+    iconBox.appendChild(buildIconSpan(STAT_ICONS[iconKey], 'result-status-icon-svg'));
+  }
+  var body = createEl('div', 'result-status-body');
+  var eyebrowEl = createEl('p', 'result-status-eyebrow');
+  eyebrowEl.textContent = eyebrow;
+  var textEl = createEl('p', 'result-status-text');
+  textEl.textContent = text;
+  body.appendChild(eyebrowEl);
+  body.appendChild(textEl);
+  card.appendChild(iconBox);
+  card.appendChild(body);
+  return card;
+}
+
+function buildCourseCard(course, labelText) {
+  var wrap = createEl('a', 'result-course');
+  wrap.href = course.url;
+  wrap.target = '_blank';
+  wrap.rel = 'noopener noreferrer';
+
+  // Leads with the recommendation, then explains why, so it reads as advice
+  // following on from the analysis above rather than a footer ad.
+  var label = createEl('p', 'result-course-label');
+  label.textContent = labelText;
+
+  var row = createEl('div', 'result-course-row');
+  row.appendChild(buildIconSpan(UI_ICONS.layers, 'result-course-icon'));
+  var nameEl = createEl('span', 'result-course-name');
+  nameEl.textContent = course.name;
+  row.appendChild(nameEl);
+  row.appendChild(buildIconSpan(STAT_ICONS.moveUpRight, 'result-course-arrow'));
+
+  var reason = createEl('p', 'result-course-reason');
+  reason.textContent = course.reason;
+
+  var source = createEl('p', 'result-course-source');
+  source.textContent = '六角學院';
+
+  [label, row, reason, source].forEach(function (el) { wrap.appendChild(el); });
+  return wrap;
+}
+
+function buildMissionCard(goalLabel, goalImage) {
+  var mission = createEl('div', 'result-mission');
+  var label = createEl('p', 'result-mission-label');
+  label.textContent = 'NEXT MISSION · 2027';
+
+  var content = createEl('div', 'result-mission-content');
+  var icon = buildIconSpan(STAT_ICONS.lock, 'result-mission-icon');
+  var text = createEl('span', 'result-mission-text');
+  text.textContent = '解鎖中……';
+  content.appendChild(icon);
+  content.appendChild(text);
+
+  mission.appendChild(label);
+  mission.appendChild(content);
+
+  setTimeout(function () {
+    icon.remove();
+    if (goalImage) {
+      var badgeImg = document.createElement('img');
+      badgeImg.className = 'result-mission-badge';
+      badgeImg.src = goalImage;
+      badgeImg.alt = '';
+      content.insertBefore(badgeImg, text);
+      flashClass(badgeImg, 'result-mission-icon--pop', 400);
+    } else {
+      var unlockIcon = buildIconSpan(STAT_ICONS.unlock, 'result-mission-icon');
+      content.insertBefore(unlockIcon, text);
+      flashClass(unlockIcon, 'result-mission-icon--pop', 400);
+    }
+    text.textContent = goalLabel;
+    text.classList.add('result-mission-text--revealed');
+  }, 650);
+
+  return mission;
+}
+
+function animateCountUp(el, target, duration) {
+  var start = Date.now();
+  var STEP_MS = 30;
+  var timer = setInterval(function () {
+    var progress = Math.min(1, (Date.now() - start) / duration);
+    el.textContent = Math.round(progress * target);
+    if (progress >= 1) clearInterval(timer);
+  }, STEP_MS);
+}
+
+// ---------- 生存卡分享面板 ----------
+
+// Opens straight away with a loading state; main.js hands it the finished
+// image with showCard() once the canvas is drawn.
+export function renderShareSheet(host, options) {
+  var overlay = createEl('div', 'share-overlay');
+  var sheet = createEl('div', 'share-sheet');
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-modal', 'true');
+  sheet.setAttribute('aria-labelledby', 'share-heading');
+
+  var header = createEl('div', 'share-header');
+  var title = createEl('h2', 'share-title');
+  title.id = 'share-heading';
+  title.textContent = '你的生存卡';
+  var closeBtn = createEl('button', 'share-close');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', '關閉');
+  closeBtn.innerHTML = UI_ICONS.close;
+  closeBtn.addEventListener('click', options.onClose);
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  sheet.appendChild(header);
+
+  var preview = createEl('div', 'share-preview');
+  var loading = createEl('p', 'share-loading');
+  loading.textContent = '生存卡生成中……';
+  preview.appendChild(loading);
+  sheet.appendChild(preview);
+
+  var note = createEl('p', 'share-note');
+  note.textContent = '分享、下載或複製連結，任選一個就完成闖關任務';
+  sheet.appendChild(note);
+
+  var actions = createEl('div', 'share-actions');
+  sheet.appendChild(actions);
+
+  var toast = createEl('p', 'share-toast');
+  toast.setAttribute('role', 'status');
+  sheet.appendChild(toast);
+
+  overlay.appendChild(sheet);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) options.onClose();
+  });
+  host.appendChild(overlay);
+  document.body.classList.add('notice-open');
+
+  var objectUrl = null;
+
+  function actionButton(className, icon, label, onClick) {
+    var btn = createEl('button', className);
+    btn.type = 'button';
+    btn.appendChild(buildIconSpan(icon, 'share-action-icon'));
+    btn.appendChild(document.createTextNode(label));
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  return {
+    showCard: function (blob, handlers) {
+      objectUrl = URL.createObjectURL(blob);
+      preview.innerHTML = '';
+      var img = document.createElement('img');
+      img.className = 'share-image';
+      img.src = objectUrl;
+      img.alt = '我的工程師生存卡';
+      preview.appendChild(img);
+
+      if (options.canShare) {
+        actions.appendChild(actionButton('btn-hazard share-action-main', UI_ICONS.share, '分享給好友', handlers.onShare));
+      }
+      var row = createEl('div', 'share-action-row');
+      row.appendChild(actionButton('btn-outline', UI_ICONS.download, '下載生存卡', handlers.onDownload));
+      row.appendChild(actionButton('btn-outline', UI_ICONS.link, '複製遊戲連結', handlers.onCopy));
+      actions.appendChild(row);
+    },
+    flash: function (message) {
+      toast.textContent = message;
+      toast.classList.add('share-toast--on');
+    },
+    close: function () {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      overlay.remove();
+      document.body.classList.remove('notice-open');
+    }
+  };
+}
+
+// ---------- 任務完成 ----------
+
+export function renderDone(root, data, options) {
+  root.innerHTML = '';
+  var screen = createEl('div', 'screen screen--done');
+  applyPersonaColors(screen, data.persona);
+
+  if (options.hasError) {
+    var warn = createEl('p', 'done-warning');
+    warn.setAttribute('role', 'alert');
+    warn.textContent = '網路好像不太順，作答資料可能沒送出成功，麻煩跟工作人員說一聲';
+    screen.appendChild(warn);
+  }
+
+  var stage = createEl('div', 'done-stage');
+  var mascot = document.createElement('img');
+  mascot.className = 'done-mascot';
+  mascot.src = data.persona.mascotImage;
+  mascot.alt = '';
+  stage.appendChild(mascot);
+  var stamp = createEl('div', 'done-stamp');
+  var stampEn = createEl('span', 'done-stamp-en');
+  stampEn.textContent = 'MISSION COMPLETE';
+  var stampZh = createEl('span', 'done-stamp-zh');
+  stampZh.textContent = '完成任務';
+  stamp.appendChild(stampEn);
+  stamp.appendChild(stampZh);
+  stage.appendChild(stamp);
+  screen.appendChild(stage);
+
+  var who = createEl('p', 'done-who');
+  who.textContent = data.nickname + '・' + data.persona.name;
+  screen.appendChild(who);
+
+  screen.appendChild(buildCourseCard(data.course, '下一步，推薦你這門課'));
+  screen.appendChild(buildFeedbackBox(options.onFeedback));
+
+  var restartBtn = createEl('button', 'btn-text');
+  restartBtn.type = 'button';
+  restartBtn.textContent = '再玩一次';
+  restartBtn.addEventListener('click', options.onRestart);
+  screen.appendChild(restartBtn);
+
+  root.appendChild(screen);
+}
+
+function buildFeedbackBox(onFeedback) {
+  var box = createEl('div', 'feedback-box');
+  var title = createEl('h3', 'feedback-title');
+  title.textContent = '想對六角說什麼？';
+  var hint = createEl('p', 'feedback-hint');
+  hint.textContent = '想學什麼、對課程有疑問，或卡在什麼程式問題，都可以留言給我們（選填）';
+  var input = document.createElement('textarea');
+  input.className = 'feedback-input';
+  input.rows = 3;
+  input.maxLength = 500;
+  input.placeholder = '例如：轉後端要先學什麼？';
+  var status = createEl('p', 'feedback-status');
+  status.setAttribute('role', 'status');
+  var send = createEl('button', 'btn-outline');
+  send.type = 'button';
+  send.textContent = '送出留言';
+
+  send.addEventListener('click', function () {
+    var message = input.value.trim();
+    if (!message) {
+      status.textContent = '先寫點什麼再送出吧';
+      input.focus();
+      return;
+    }
+    send.disabled = true;
+    send.textContent = '送出中…';
+    onFeedback(message).then(function (result) {
+      if (result && result.status === 'error') {
+        send.disabled = false;
+        send.textContent = '送出留言';
+        status.textContent = '送出失敗，請再試一次';
+        return;
+      }
+      box.innerHTML = '';
+      var thanks = createEl('p', 'feedback-thanks');
+      thanks.textContent = '收到了，謝謝你的留言！';
+      box.appendChild(thanks);
+    });
+  });
+
+  [title, hint, input, send, status].forEach(function (el) { box.appendChild(el); });
+  return box;
+}

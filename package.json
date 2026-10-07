@@ -1,0 +1,8 @@
+{
+  "name": "engineer-survival-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
