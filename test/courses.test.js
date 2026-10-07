@@ -72,3 +72,13 @@ test('每一門推薦都帶得出名稱、網址跟理由', function () {
     assert.ok(r.reason && r.reason.length > 0);
   });
 });
+
+test('設計師推 UI 設計入門', function () {
+  var r = recommendCourse({ role: 'designer', goal2027: 'raise' });
+  assert.equal(r.name, COURSES.ui.name);
+});
+
+test('學生／轉職中推體驗營', function () {
+  var r = recommendCourse({ role: 'student', goal2027: 'switchJob' });
+  assert.equal(r.name, COURSES.starterCamp.name);
+});

@@ -68,13 +68,13 @@ export async function exportResultCardImage(data) {
   var y = {};
   y.brands = 52;
   y.panelTop = 170;
-  y.mascot = 196;
-  y.greeting = 556;
-  y.badge = 590;
-  y.name = 690;
-  y.english = 732;
-  y.score = 800;
-  y.stats = 930;
+  y.mascot = 262;
+  y.greeting = 222;
+  y.badge = 612;
+  y.name = 822;
+  y.english = 864;
+  y.score = 748;
+  y.stats = 942;
   y.highlight = y.stats + 4 * 92 + 10;
   y.tags = y.highlight + 130;
   y.mission = y.tags + (stackTags ? TAG_H * 2 + 14 : TAG_H) + 44;
@@ -283,11 +283,11 @@ function drawHeading(ctx, data, accent, y) {
   if (data.nickname) {
     ctx.fillStyle = accent;
     ctx.font = '700 26px ' + FONT;
-    ctx.fillText(data.nickname + ' 的生存報告', W / 2, y.greeting);
+    ctx.fillText(data.nickname + ' 的生存報告出爐了！', W / 2, y.greeting);
   }
 
   ctx.font = '700 22px ' + MONO;
-  var badgeText = 'SURVIVAL TYPE';
+  var badgeText = 'SURVIVAL SCORE';
   var bw = ctx.measureText(badgeText).width + 60;
   ctx.fillStyle = hexToRgba(accent, 0.12);
   ctx.fillRect(W / 2 - bw / 2, y.badge, bw, 44);
@@ -307,23 +307,17 @@ function drawHeading(ctx, data, accent, y) {
   ctx.font = '700 22px ' + MONO;
   ctx.fillText(spaced(data.persona.englishName || ''), W / 2, y.english);
 
-  // survival score
+  // 生存率：數字對準正中間，「%」掛在右邊、不參與置中
+  ctx.textAlign = 'center';
+  ctx.fillStyle = accent;
+  ctx.font = '700 88px ' + MONO;
+  var numText = String(data.survivalIndex);
+  var numW = ctx.measureText(numText).width;
+  ctx.fillText(numText, W / 2, y.score);
   ctx.textAlign = 'left';
-  ctx.fillStyle = C.muted;
-  ctx.font = '700 20px ' + MONO;
-  ctx.fillText(spaced('SURVIVAL SCORE'), INNER_L, y.score);
-  ctx.textAlign = 'right';
-  ctx.fillStyle = accent;
-  ctx.font = '700 64px ' + MONO;
-  var scoreText = String(data.survivalIndex);
-  ctx.font = '700 26px ' + MONO;
-  var maxW = ctx.measureText('/100').width;
-  ctx.fillStyle = C.muted;
-  ctx.fillText('/100', INNER_R, y.score + 10);
-  ctx.font = '700 64px ' + MONO;
-  ctx.fillStyle = accent;
-  ctx.fillText(scoreText, INNER_R - maxW - 8, y.score + 10);
-  drawSegmentBar(ctx, INNER_L, y.score + 34, INNER_W, 18, data.survivalIndex / 100, accent);
+  ctx.font = '700 42px ' + MONO;
+  ctx.fillText('%', W / 2 + numW / 2 + 4, y.score - 10);
+  ctx.textAlign = 'center';
 }
 
 // Bars are drawn as discrete segments, like an ammo/health meter in a HUD.

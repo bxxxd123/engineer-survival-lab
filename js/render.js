@@ -1,6 +1,5 @@
 import { QUESTIONS } from './questions.js';
 import { ROLE_ICONS, STAT_ICONS, OPTION_ICONS, UI_ICONS, BRAND_ICONS } from './icons.js';
-import { flashClass } from './animations.js';
 import { PRIVACY_CONFIG, orPlaceholder } from '../privacy-config.js';
 
 var TOTAL_LEVELS = QUESTIONS.length;
@@ -498,7 +497,10 @@ export function renderLevel(root, question, state, handlers) {
     screen.appendChild(backBtn);
   }
 
-  if (question.type === 'multi') {
+  var pickedCount = (state.answers[question.id] || []).length;
+  // Required multi-select questions show no button until something is picked;
+  // optional ones offer a skip instead.
+  if (question.type === 'multi' && (pickedCount > 0 || !question.required)) {
     var selected = state.answers[question.id] || [];
     var verb = question.visualStyle === 'bugs' ? '已鎖定' : '已選';
     var bar = createEl('div', 'level-actions');
@@ -718,10 +720,10 @@ export function renderResult(root, data, handlers) {
   hero.appendChild(mascot);
 
   var greeting = createEl('p', 'result-greeting');
-  greeting.textContent = data.nickname + '，你的生存報告出爐了';
+  greeting.textContent = data.nickname + ' 的生存報告出爐了！';
 
   var badge = createEl('div', 'result-badge');
-  badge.textContent = 'SURVIVAL TYPE';
+  badge.textContent = 'SURVIVAL SCORE';
 
   var name = createEl('h2', 'result-name');
   name.textContent = data.persona.name;
@@ -729,25 +731,18 @@ export function renderResult(root, data, handlers) {
   var englishName = createEl('p', 'result-english-name');
   englishName.textContent = data.persona.englishName;
 
+  // 生存率：SURVIVAL SCORE 標籤下方直接放數字，再接人設名稱
   var scoreBlock = createEl('div', 'result-score');
-  var scoreHead = createEl('div', 'result-score-head');
-  var scoreLabel = createEl('p', 'result-score-label');
-  scoreLabel.textContent = 'SURVIVAL SCORE';
-  var scoreNumberRow = createEl('div', 'result-score-number-row');
+  var scoreValue = createEl('p', 'result-score-value');
   var scoreNumber = createEl('span', 'result-score-number');
   scoreNumber.textContent = '0';
-  var scoreMax = createEl('span', 'result-score-max');
-  scoreMax.textContent = '/100';
-  scoreNumberRow.appendChild(scoreNumber);
-  scoreNumberRow.appendChild(scoreMax);
-  scoreHead.appendChild(scoreLabel);
-  scoreHead.appendChild(scoreNumberRow);
-  var indexBar = buildSegmentBar(0, 'segment-bar--lg');
-  scoreBlock.appendChild(scoreHead);
-  scoreBlock.appendChild(indexBar);
+  var scoreUnit = createEl('span', 'result-score-unit');
+  scoreUnit.textContent = '%';
+  scoreValue.appendChild(scoreNumber);
+  scoreValue.appendChild(scoreUnit);
+  scoreBlock.appendChild(scoreValue);
 
   setTimeout(function () {
-    lightSegments(indexBar, data.survivalIndex / 100);
     animateCountUp(scoreNumber, data.survivalIndex, 900);
   }, 30);
 
@@ -764,22 +759,10 @@ export function renderResult(root, data, handlers) {
   insightGrid.appendChild(buildInsightCard('triangleAlert', 'RISK', data.persona.deepDive.riskTitle, data.persona.deepDive.risk));
   insightGrid.appendChild(buildInsightCard('moveUpRight', 'NEXT MOVE', data.persona.deepDive.actionTitle, data.persona.deepDive.action));
 
-  var statusGrid = createEl('div', 'result-status-grid');
-  var bugCard = buildStatusCard('bug', 'bug', 'BUG DETECTED', data.careerBugLabel || '目前沒什麼 Bug', data.careerBugImage);
-  // Up to three bugs can be picked; two or more need the full row to fit.
-  if ((data.careerBugLabel || '').indexOf('、') !== -1) {
-    bugCard.classList.add('result-status-card--wide');
-  }
-  statusGrid.appendChild(bugCard);
-  statusGrid.appendChild(buildStatusCard('cpu', 'ai', 'AI STATUS', data.aiBuffLabel));
+  var summary = buildSummaryCards(data);
+  var course = buildCourseCard(data.course, '為你推薦的六角課程');
 
-  var mission = buildMissionCard(data.goalLabel, data.goalImage);
-  var course = buildCourseCard(data.course, '先推薦你這門課');
-
-  // Course sits right after the deep-dive analysis: the cards above end on
-  // 建議行動, so the suggestion follows straight on from it instead of
-  // trailing after the 2027 mission, which closes the card.
-  [hero, greeting, badge, name, englishName, scoreBlock, stats, insightHero, insightGrid, course, statusGrid, mission].forEach(function (el) { card.appendChild(el); });
+  [greeting, hero, badge, scoreBlock, name, englishName, stats, insightHero, summary, insightGrid, course].forEach(function (el) { card.appendChild(el); });
   screen.appendChild(card);
 
   var restartBtn = createEl('button', 'btn-text');
@@ -869,92 +852,90 @@ function buildInsightCard(iconKey, eyebrow, title, description) {
   return card;
 }
 
-function buildStatusCard(iconKey, variant, eyebrow, text, image) {
-  var card = createEl('div', 'result-status-card result-status-card--' + variant);
-  var iconBox = createEl('div', 'result-status-icon');
+// 三張橫排小卡：職涯卡點、AI 狀態、2027 目標，是作答的戰績總結
+function buildSummaryCards(data) {
+  var bugs = (data.careerBugLabel || '').split('、').filter(Boolean);
+  var bugText = bugs.length ? bugs[0] + (bugs.length > 1 ? ' +' + (bugs.length - 1) : '') : '目前沒什麼 Bug';
+  var row = createEl('div', 'result-summary');
+  row.appendChild(buildSummaryCard('bug', '職涯卡點', bugText, data.careerBugImage, STAT_ICONS.bug));
+  row.appendChild(buildSummaryCard('ai', 'AI 狀態', data.aiBuffLabel, '', STAT_ICONS.cpu));
+  row.appendChild(buildSummaryCard('goal', '2027 目標', data.goalLabel, data.goalImage, STAT_ICONS.trophy));
+  return row;
+}
+
+function buildSummaryCard(variant, eyebrow, text, image, icon) {
+  var card = createEl('div', 'summary-card summary-card--' + variant);
+  var visual = createEl('div', 'summary-visual');
   if (image) {
     var img = document.createElement('img');
-    img.className = 'result-status-icon-image';
     img.src = image;
     img.alt = '';
-    iconBox.appendChild(img);
+    visual.appendChild(img);
   } else {
-    iconBox.appendChild(buildIconSpan(STAT_ICONS[iconKey], 'result-status-icon-svg'));
+    visual.appendChild(buildIconSpan(icon, 'summary-icon'));
   }
-  var body = createEl('div', 'result-status-body');
-  var eyebrowEl = createEl('p', 'result-status-eyebrow');
+  var eyebrowEl = createEl('p', 'summary-eyebrow');
   eyebrowEl.textContent = eyebrow;
-  var textEl = createEl('p', 'result-status-text');
+  var textEl = createEl('p', 'summary-text');
   textEl.textContent = text;
-  body.appendChild(eyebrowEl);
-  body.appendChild(textEl);
-  card.appendChild(iconBox);
-  card.appendChild(body);
+  [visual, eyebrowEl, textEl].forEach(function (el) { card.appendChild(el); });
   return card;
 }
 
+function isLocalPreview() {
+  return /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+}
+
+// 推薦課程：整頁的主角之一，有自己的按鈕，跟唯讀的解析區塊明顯不同
 function buildCourseCard(course, labelText) {
   var wrap = createEl('a', 'result-course');
   wrap.href = course.url;
   wrap.target = '_blank';
   wrap.rel = 'noopener noreferrer';
 
-  // Leads with the recommendation, then explains why, so it reads as advice
-  // following on from the analysis above rather than a footer ad.
+  var head = createEl('div', 'result-course-head');
+  var logo = document.createElement('img');
+  logo.className = 'result-course-logo';
+  logo.src = 'assets/brand/hexschool.svg';
+  logo.alt = '六角學院';
   var label = createEl('p', 'result-course-label');
   label.textContent = labelText;
+  head.appendChild(logo);
+  head.appendChild(label);
+  wrap.appendChild(head);
 
-  var row = createEl('div', 'result-course-row');
-  row.appendChild(buildIconSpan(UI_ICONS.layers, 'result-course-icon'));
-  var nameEl = createEl('span', 'result-course-name');
+  // Name and reason sit beside a small thumbnail; a full-width banner pulled
+  // the eye away from the course name and clashed with the dark theme.
+  var body = createEl('div', 'result-course-body');
+  var text = createEl('div', 'result-course-text');
+  var nameEl = createEl('p', 'result-course-name');
   nameEl.textContent = course.name;
-  row.appendChild(nameEl);
-  row.appendChild(buildIconSpan(STAT_ICONS.moveUpRight, 'result-course-arrow'));
-
   var reason = createEl('p', 'result-course-reason');
   reason.textContent = course.reason;
+  text.appendChild(nameEl);
+  text.appendChild(reason);
+  body.appendChild(text);
+  if (course.image) {
+    var thumb = document.createElement('img');
+    thumb.className = 'result-course-thumb';
+    thumb.src = course.image;
+    thumb.alt = '';
+    body.appendChild(thumb);
+  } else if (isLocalPreview()) {
+    // Only on a local preview: marks where the thumbnail will go. The live
+    // site shows the text-only card until the course has an image.
+    var slot = createEl('div', 'result-course-thumb result-course-thumb--empty');
+    slot.textContent = '課程圖';
+    body.appendChild(slot);
+  }
+  wrap.appendChild(body);
 
-  var source = createEl('p', 'result-course-source');
-  source.textContent = '六角學院';
+  var cta = createEl('span', 'result-course-cta');
+  cta.appendChild(document.createTextNode('查看課程'));
+  cta.appendChild(buildIconSpan(STAT_ICONS.moveUpRight, 'result-course-arrow'));
 
-  [label, row, reason, source].forEach(function (el) { wrap.appendChild(el); });
+  wrap.appendChild(cta);
   return wrap;
-}
-
-function buildMissionCard(goalLabel, goalImage) {
-  var mission = createEl('div', 'result-mission');
-  var label = createEl('p', 'result-mission-label');
-  label.textContent = 'NEXT MISSION · 2027';
-
-  var content = createEl('div', 'result-mission-content');
-  var icon = buildIconSpan(STAT_ICONS.lock, 'result-mission-icon');
-  var text = createEl('span', 'result-mission-text');
-  text.textContent = '解鎖中……';
-  content.appendChild(icon);
-  content.appendChild(text);
-
-  mission.appendChild(label);
-  mission.appendChild(content);
-
-  setTimeout(function () {
-    icon.remove();
-    if (goalImage) {
-      var badgeImg = document.createElement('img');
-      badgeImg.className = 'result-mission-badge';
-      badgeImg.src = goalImage;
-      badgeImg.alt = '';
-      content.insertBefore(badgeImg, text);
-      flashClass(badgeImg, 'result-mission-icon--pop', 400);
-    } else {
-      var unlockIcon = buildIconSpan(STAT_ICONS.unlock, 'result-mission-icon');
-      content.insertBefore(unlockIcon, text);
-      flashClass(unlockIcon, 'result-mission-icon--pop', 400);
-    }
-    text.textContent = goalLabel;
-    text.classList.add('result-mission-text--revealed');
-  }, 650);
-
-  return mission;
 }
 
 function animateCountUp(el, target, duration) {

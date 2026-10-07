@@ -5,6 +5,7 @@
 //
 // 課程名稱與網址取自 hexschool.com/courses（2026-10 查核）。課程若改名、
 // 下架或換網址，改這張表就好，比對邏輯不用動。
+// image 是課程縮圖（放在 assets/courses/），有填才會顯示在推薦卡上方。
 
 var BASE = 'https://www.hexschool.com';
 
@@ -19,7 +20,7 @@ export var COURSES = {
   starterCamp: { name: '30 天軟體工程師體驗營', url: BASE + '/courses/software-engineer-camping.html' },
   backendTraining: { name: 'Node.js+雲端：後端就業培訓班', url: BASE + '/courses/backend-training.html' },
   cloudTraining: { name: '雲端架構部署直播班', url: BASE + '/courses/cloud_training.html' },
-  frontendTraining: { name: 'JS+Vue 前端工程師培訓班', url: BASE + '/courses/frontend-training.html' },
+  frontendTraining: { name: 'JS+Vue 前端工程師培訓班', url: BASE + '/courses/frontend-training.html', image: 'assets/courses/frontend-training.jpg' },
   typescript: { name: 'TypeScript 實戰課', url: BASE + '/courses/typescript-training.html' },
   react: { name: 'React 作品實戰班', url: BASE + '/courses/react-training.html' },
   jsCore: { name: 'JavaScript 核心篇', url: BASE + '/courses/js-core.html' },
@@ -49,6 +50,16 @@ var RULES = [
     when: function (a) { return a.experience === 'lt1'; },
     course: 'starterCamp',
     reason: '你還在第一年，這時候把基礎打穩，後面每一步都會輕鬆很多。'
+  },
+  {
+    when: function (a) { return a.role === 'designer'; },
+    course: 'ui',
+    reason: '設計師懂一點開發會很吃香，但先把 UI 設計的底子練扎實，你的作品才有說服力。'
+  },
+  {
+    when: function (a) { return a.role === 'student'; },
+    course: 'starterCamp',
+    reason: '還在學或準備轉職，先用體驗營走一遍工程師的日常，確認方向再全力衝。'
   },
   {
     when: function (a) { return a.role === 'backend' || a.role === 'devops'; },
@@ -96,5 +107,5 @@ export function recommendCourse(answers) {
   }
   var key = typeof picked.course === 'function' ? picked.course(answers) : picked.course;
   var course = COURSES[key] || COURSES.allCourses;
-  return { name: course.name, url: course.url, reason: picked.reason };
+  return { name: course.name, url: course.url, image: course.image || '', reason: picked.reason };
 }

@@ -93,6 +93,29 @@ export var ROLE_ICONS = {
     '<line x1="19" y1="26" x2="16.5" y2="28.5" stroke-width="2.4"/>' +
     '</svg>',
 
+  designer:
+    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<rect x="4" y="7" width="32" height="24" rx="2"/>' +
+    '<path d="M9 25 C13 13, 21 27, 30 13"/>' +
+    '<rect x="7.5" y="23.5" width="3" height="3" fill="currentColor" stroke="none"/>' +
+    '<rect x="28.5" y="11.5" width="3" height="3" fill="currentColor" stroke="none"/>' +
+    '<line x1="9" y1="25" x2="15" y2="21" opacity="0.6"/>' +
+    '<path d="M33 27 L41 35 L36 42 L28 34 Z"/>' +
+    '<line x1="34.5" y1="35.5" x2="31" y2="39"/>' +
+    '<circle cx="35.5" cy="34.5" r="1.2" fill="currentColor" stroke="none"/>' +
+    '<line x1="36" y1="42" x2="38" y2="44"/>' +
+    '</svg>',
+
+  student:
+    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M24 9 L4 17.5 L24 26 L44 17.5 Z"/>' +
+    '<path d="M12 21 V30 C12 33.5 18 36.5 24 36.5 S36 33.5 36 30 V21"/>' +
+    '<line x1="40" y1="19.2" x2="40" y2="30"/>' +
+    '<circle cx="40" cy="32" r="2" fill="currentColor" stroke="none"/>' +
+    '<path d="M18 42 H30" opacity="0.6"/>' +
+    '<path d="M26 39.5 L30 42 L26 44.5" opacity="0.6"/>' +
+    '</svg>',
+
   other:
     '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
     '<path d="M24 5 L37 15 L32 41 L16 41 L11 15 Z"/>' +
@@ -236,12 +259,17 @@ export var OPTION_ICONS = {
     '<path d="M17 35c1.5 2.6 4 4 7 4s5.5-1.4 7-4" stroke-width="1.5" opacity="0.8"/>' +
     '</svg>',
 
+  // 小人推門往外跑：不加薪也要走
   'jumpThreshold:noRaise':
     '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M26 6h-13a3 3 0 0 0-3 3v30a3 3 0 0 0 3 3h13"/>' +
-    '<line x1="26" y1="24" x2="42" y2="24" stroke-width="2.2"/>' +
-    '<path d="M35.5 17.5L42 24l-6.5 6.5" stroke-width="2.2"/>' +
-    '<circle cx="19" cy="24" r="1.2" fill="currentColor" stroke="none"/>' +
+    '<path d="M6 42 V7 H22 V42"/>' +
+    '<path d="M22 7 L14 11 V44 L22 42"/>' +
+    '<circle cx="16.5" cy="27" r="0.9" fill="currentColor" stroke="none"/>' +
+    '<circle cx="34" cy="11" r="3"/>' +
+    '<path d="M33 15 L29.5 26"/>' +
+    '<path d="M32 18 L38.5 21.5 M32 18 L26 20.5"/>' +
+    '<path d="M29.5 26 L35.5 31 L39.5 30 M29.5 26 L27 34 L23 36"/>' +
+    '<path d="M41 13 H45 M42 17 H46" opacity="0.6"/>' +
     '</svg>',
 
   'jumpThreshold:plus10':

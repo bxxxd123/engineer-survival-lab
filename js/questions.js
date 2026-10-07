@@ -5,7 +5,7 @@ export const QUESTIONS = [
     type: 'single',
     visualStyle: 'cards',
     characterMood: 'coding',
-    prompt: '選擇你的工程師角色！',
+    prompt: '你目前的職業角色是？',
     options: [
       { value: 'frontend', label: '前端', emoji: '🎨' },
       { value: 'backend', label: '後端', emoji: '⚙️' },
@@ -15,6 +15,8 @@ export const QUESTIONS = [
       { value: 'data', label: 'Data', emoji: '📊' },
       { value: 'devops', label: 'DevOps', emoji: '🛠️' },
       { value: 'qa', label: 'QA / 測試', emoji: '🔍' },
+      { value: 'designer', label: 'UI/UX 設計師', emoji: '🖌️' },
+      { value: 'student', label: '學生／轉職中', emoji: '🎓' },
       { value: 'other', label: '其他', emoji: '✨' }
     ]
   },
@@ -26,7 +28,7 @@ export const QUESTIONS = [
     // 有高低順序的題目：手機上改成垂直清單，右邊用等級格標出程度
     layout: 'ladder',
     characterMood: 'idea',
-    prompt: '你在工程師世界生存多久了？',
+    prompt: '你在這行生存幾年了？',
     options: [
       { value: 'lt1', rank: 1, label: '未滿1年', emoji: '🌱', image: 'assets/growth/growth-01-sprout.png', personaPoints: { careerDebugger: 1 } },
       { value: '1to3', rank: 2, label: '1–3年', emoji: '🌿', image: 'assets/growth/growth-02-plant.png', personaPoints: { careerDebugger: 1 } },
@@ -43,13 +45,13 @@ export const QUESTIONS = [
     // 有高低順序的題目：手機上改成垂直清單，右邊用等級格標出程度
     layout: 'ladder',
     characterMood: 'thinking',
-    prompt: '現在這份工作，你還好嗎？',
+    prompt: '你在目前這份工作的生存狀態？',
     options: [
-      { value: 'great', rank: 5, label: '很滿意', emoji: '😄', personaPoints: { stableGrowth: 2 }, dimensionValues: { stability: 5, careerBugIndex: 1 } },
-      { value: 'good', rank: 4, label: '滿意', emoji: '🙂', personaPoints: { stableGrowth: 1 }, dimensionValues: { stability: 4, careerBugIndex: 2 } },
+      { value: 'great', rank: 5, label: '游刃有餘', emoji: '😄', personaPoints: { stableGrowth: 2 }, dimensionValues: { stability: 5, careerBugIndex: 1 } },
+      { value: 'good', rank: 4, label: '還不錯', emoji: '🙂', personaPoints: { stableGrowth: 1 }, dimensionValues: { stability: 4, careerBugIndex: 2 } },
       { value: 'ok', rank: 3, label: '普通', emoji: '😐', personaPoints: { radarWatcher: 1 }, dimensionValues: { stability: 3, careerBugIndex: 3 } },
-      { value: 'bad', rank: 2, label: '不太好', emoji: '😣', personaPoints: { careerDebugger: 1, jobHopper: 1 }, dimensionValues: { stability: 2, careerBugIndex: 4 } },
-      { value: 'terrible', rank: 1, label: '我快不行了', emoji: '🥵', personaPoints: { jobHopper: 2, careerDebugger: 1 }, dimensionValues: { stability: 1, careerBugIndex: 5 } }
+      { value: 'bad', rank: 2, label: '有點吃力', emoji: '😣', personaPoints: { careerDebugger: 1, jobHopper: 1 }, dimensionValues: { stability: 2, careerBugIndex: 4 } },
+      { value: 'terrible', rank: 1, label: '快撐不住了', emoji: '🥵', personaPoints: { jobHopper: 2, careerDebugger: 1 }, dimensionValues: { stability: 1, careerBugIndex: 5 } }
     ]
   },
   {
@@ -107,11 +109,13 @@ export const QUESTIONS = [
   },
   {
     id: 'careerBug',
+    // 必選：沒有卡點／沒在用 AI 的人也有對應選項可以選
+    required: true,
     level: 7,
     type: 'multi',
     visualStyle: 'bugs',
     characterMood: 'stressed',
-    prompt: '你目前的職涯卡點？（可複選 3 項）',
+    prompt: '你目前的職涯卡點？（選 1–3 項）',
     maxSelections: 3,
     exclusiveOption: 'noBug',
     // Averaged rather than summed: picking three bugs says something about
@@ -147,11 +151,13 @@ export const QUESTIONS = [
   },
   {
     id: 'aiTools',
+    // 必選：沒有卡點／沒在用 AI 的人也有對應選項可以選
+    required: true,
     level: 9,
     type: 'multi',
     visualStyle: 'gear',
     characterMood: 'ai',
-    prompt: '你現在最常用哪個 AI Coding 夥伴？（可複選 3 項）',
+    prompt: '你目前常用的 AI 夥伴？（選 1–3 項）',
     maxSelections: 3,
     exclusiveOption: 'none',
     options: [

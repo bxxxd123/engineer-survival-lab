@@ -945,6 +945,26 @@ button {
   height: 64px;
 }
 
+/* 角色題有 11 個選項，卡片壓矮一點，手機第一屏才放得下 */
+.options-grid--cards .option-card {
+  padding: 10px 8px;
+  gap: 4px;
+}
+
+.options-grid--cards .option-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.options-grid--cards .option-visual {
+  min-height: 34px;
+}
+
+/* 兩欄網格選項是單數時，最後一個（通常是「其他」）佔滿整排 */
+.options-grid:not(.options-grid--ladder) > .option-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 /* ---------- 有高低順序的題目：垂直清單＋等級格 ---------- */
 .options-grid--ladder {
   grid-template-columns: 1fr;
@@ -1264,7 +1284,7 @@ button {
 }
 
 .result-greeting {
-  margin: -4px 0 -6px;
+  margin: 0 0 6px;
   font-size: 15px;
   font-weight: 700;
   color: var(--persona-accent, var(--sv-neon));
@@ -1304,45 +1324,34 @@ button {
 .result-score {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: left;
+  align-items: center;
+  /* 數字底部到類型名稱的字頂，目視間距 16px */
+  margin: -4px 0 -23px;
 }
 
-.result-score-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-
-.result-score-label {
-  margin: 0 0 6px;
+/* 數字本身對準正中間，「%」掛在右邊、不參與置中，
+   不然大字「75」會因為小字「%」被往左推 */
+.result-score-value {
+  position: relative;
+  margin: -2px 0 0;
   font-family: var(--sv-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--sv-muted);
-}
-
-.result-score-number-row {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
+  line-height: 1;
+  color: var(--persona-accent, var(--sv-neon));
+  text-shadow: 0 0 18px var(--persona-glow, rgba(198, 255, 26, 0.3));
 }
 
 .result-score-number {
-  font-family: var(--sv-mono);
-  font-size: 52px;
+  font-size: 60px;
   font-weight: 700;
-  line-height: 1;
-  color: var(--persona-accent, var(--sv-neon));
-  text-shadow: 0 0 16px var(--persona-glow, rgba(198, 255, 26, 0.3));
 }
 
-.result-score-max {
-  font-family: var(--sv-mono);
-  font-size: 18px;
+.result-score-unit {
+  position: absolute;
+  left: 100%;
+  bottom: 0.25em;
+  margin-left: 2px;
+  font-size: 28px;
   font-weight: 700;
-  color: var(--sv-muted);
 }
 
 /* 分段的血條／彈藥條 */
@@ -1351,10 +1360,6 @@ button {
   grid-template-columns: repeat(20, 1fr);
   gap: 3px;
   height: 8px;
-}
-
-.segment-bar--lg {
-  height: 12px;
 }
 
 .segment {
@@ -1512,228 +1517,186 @@ button {
   color: var(--sv-muted);
 }
 
-.result-status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.result-status-card--wide {
-  grid-column: 1 / -1;
-}
-
-.result-status-card--wide .result-status-text {
-  -webkit-line-clamp: 3;
-}
-
-.result-status-card {
+/* 推薦課程：整頁唯一可以點的區塊，也是推廣重點，所以做成實心螢光綠框＋自己的按鈕 */
+.result-course {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 3px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
   text-align: left;
+  padding: 18px 18px 16px;
+  border-radius: 4px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(198, 255, 26, 0.16), transparent 60%),
+    #0F1612;
+  border: 1.5px solid var(--sv-neon);
+  box-shadow: 0 0 26px rgba(198, 255, 26, 0.16);
+  text-decoration: none;
+  color: var(--sv-text);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.result-course:hover,
+.result-course:focus-visible {
+  box-shadow: 0 0 34px rgba(198, 255, 26, 0.28);
+  transform: translateY(-2px);
+}
+
+.result-course-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.result-course-text {
+  flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.result-status-card--bug {
-  background: rgba(255, 77, 61, 0.08);
-  border: 1px solid rgba(255, 77, 61, 0.35);
-}
-
-.result-status-card--ai {
-  background: rgba(198, 255, 26, 0.06);
+/* 小縮圖：靠右、4:3，裁掉圖上重複的課名文字，只留插畫 */
+.result-course-thumb {
+  flex-shrink: 0;
+  width: 104px;
+  aspect-ratio: 4 / 3;
+  margin-top: 4px;
+  object-fit: cover;
+  object-position: 78% 50%;
+  border-radius: 3px;
   border: 1px solid var(--sv-line-strong);
 }
 
-.result-status-icon {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+.result-course-thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--sv-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed var(--sv-steel);
+}
+
+.result-course-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-course-logo {
+  height: 18px;
+  width: auto;
+}
+
+.result-course-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--sv-neon);
+}
+
+.result-course-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.result-course-reason {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #B9C4BF;
+}
+
+.result-course-cta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--sv-ink);
+  background: var(--sv-neon);
+  border-radius: 3px;
+}
+
+.result-course-arrow {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+}
+
+.result-course-arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* 三張橫排小卡：作答的戰績總結 */
+.result-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.summary-card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 12px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(198, 255, 26, 0.45);
+}
+
+.summary-visual {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.result-status-card--bug .result-status-icon {
-  color: var(--sv-danger);
+.summary-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.result-status-card--ai .result-status-icon {
+.summary-icon {
+  width: 26px;
+  height: 26px;
   color: var(--sv-neon);
 }
 
-.result-status-icon-svg {
-  width: 20px;
-  height: 20px;
-}
-
-.result-status-icon-svg svg {
+.summary-icon svg {
   width: 100%;
   height: 100%;
 }
 
-.result-status-icon-image {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-
-.result-status-body {
-  min-width: 0;
-}
-
-.result-status-eyebrow {
-  margin: 0 0 2px;
-  font-family: var(--sv-mono);
+.summary-eyebrow {
+  margin: 0;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
   color: var(--sv-muted);
 }
 
-.result-status-text {
+.summary-text {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* 推薦課程：整頁唯一可以點的區塊，所以用實心螢光綠框跟其他唯讀區塊區分 */
-.result-course {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 16px 18px;
-  border-radius: 3px;
-  background:
-    linear-gradient(135deg, rgba(198, 255, 26, 0.12) 0%, rgba(198, 255, 26, 0.03) 100%),
-    #0F1612;
-  border: 1px solid rgba(198, 255, 26, 0.5);
-  box-shadow: 0 0 22px rgba(198, 255, 26, 0.1);
-  text-decoration: none;
-  color: var(--sv-text);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.result-course:hover,
-.result-course:focus-visible {
-  border-color: var(--sv-neon);
-  box-shadow: 0 0 28px rgba(198, 255, 26, 0.2);
-  transform: translateY(-2px);
-}
-
-.result-course-label {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--sv-neon);
-}
-
-.result-course-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.result-course-icon,
-.result-course-arrow {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  color: var(--sv-neon);
-}
-
-.result-course-icon svg,
-.result-course-arrow svg {
-  width: 100%;
-  height: 100%;
-}
-
-.result-course-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 16px;
-  font-weight: 900;
-}
-
-.result-course-reason {
-  margin: 8px 0 0;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #B9C4BF;
-}
-
-.result-course-source {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: var(--sv-muted);
-}
-
-.result-mission {
-  padding: 16px;
-  border-radius: 3px;
-  background: rgba(255, 185, 40, 0.05);
-  border: 1px dashed rgba(255, 185, 40, 0.45);
-}
-
-.result-mission-label {
-  margin: 0 0 10px;
-  font-family: var(--sv-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--sv-amber);
-}
-
-.result-mission-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.result-mission-icon {
-  width: 28px;
-  height: 28px;
-  color: var(--sv-amber);
-}
-
-.result-mission-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.result-mission-icon--pop {
-  animation: missionPop 0.4s ease;
-}
-
-.result-mission-badge {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-}
-
-@keyframes missionPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-
-.result-mission-text {
-  font-size: 19px;
-  font-weight: 900;
-  color: var(--sv-muted);
-  transition: color 0.3s ease;
-}
-
-.result-mission-text--revealed {
-  color: var(--sv-text);
 }
 
 .result-actions-hint {
