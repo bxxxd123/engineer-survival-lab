@@ -131,6 +131,7 @@ function handleSingleSelect(value) {
   if (state.isAdvancing) return;
   var question = QUESTIONS[state.levelIndex];
   recordSingleAnswer(state, question.id, value);
+  vibrate(15);
   var option = question.options.filter(function (o) { return o.value === value; })[0];
   // 「其他」：停在這題讓玩家選填自己的職業，按下一關才走
   if (option && option.freeText) {
@@ -146,10 +147,9 @@ function handleMultiToggle(value) {
   var question = QUESTIONS[state.levelIndex];
   var before = (state.answers[question.id] || []).length;
   toggleMultiAnswer(state, question, value);
-  // 狙擊鎖定 bug 時輕震一下
-  if (question.visualStyle === 'bugs' && (state.answers[question.id] || []).length > before) {
-    vibrate(30);
-  }
+  // 每次點選都輕震一下；狙擊鎖定 bug 時震得重一點
+  var added = (state.answers[question.id] || []).length > before;
+  vibrate(question.visualStyle === 'bugs' && added ? 30 : 15);
   rerender();
 }
 

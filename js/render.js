@@ -78,6 +78,12 @@ function buildHomeTitle() {
   return wrap;
 }
 
+// 電腦打中文時，按 Enter 是在確認選字，不是送出。把它當送出的話，
+// 焦點被移走的瞬間瀏覽器會把剛選的字再輸入一次（「大白」變「大白大白」）。
+function isConfirmingIme(e) {
+  return e.isComposing || e.keyCode === 229;
+}
+
 function buildHomeField(opts) {
   var wrap = createEl('div', 'home-field');
   var row = createEl('label', 'home-field-label');
@@ -194,6 +200,7 @@ export function renderIntro(root, handlers) {
       error.hidden = true;
     });
     input.addEventListener('keydown', function (e) {
+      if (isConfirmingIme(e)) return;
       if (e.key === 'Enter') { e.preventDefault(); submit(); }
     });
   });
@@ -568,6 +575,7 @@ export function renderLevel(root, question, state, handlers) {
     freeInput.setAttribute('aria-label', picked.freeText);
     freeInput.addEventListener('input', function () { handlers.onFreeText(freeInput.value); });
     freeInput.addEventListener('keydown', function (e) {
+      if (isConfirmingIme(e)) return;
       if (e.key === 'Enter') { e.preventDefault(); handlers.onMultiNext(); }
     });
     var freeTag = createEl('span', 'home-field-tag');
@@ -1215,6 +1223,8 @@ function buildFeedbackBox(onFeedback) {
   send.type = 'button';
   send.textContent = '送出留言';
 
+  // 按下就顯示收到，資料在背景送（失敗會自動重送、存在手機稍後補送），
+  // 玩家不用等試算表寫完。
   send.addEventListener('click', function () {
     var message = input.value.trim();
     if (!message) {
@@ -1222,20 +1232,11 @@ function buildFeedbackBox(onFeedback) {
       input.focus();
       return;
     }
-    send.disabled = true;
-    send.textContent = '送出中…';
-    onFeedback(message).then(function (result) {
-      if (result && result.status === 'error') {
-        send.disabled = false;
-        send.textContent = '送出留言';
-        status.textContent = '送出失敗，請再試一次';
-        return;
-      }
-      box.innerHTML = '';
-      var thanks = createEl('p', 'feedback-thanks');
-      thanks.textContent = '收到了，謝謝你的留言！';
-      box.appendChild(thanks);
-    });
+    onFeedback(message);
+    box.innerHTML = '';
+    var thanks = createEl('p', 'feedback-thanks');
+    thanks.textContent = '收到了，謝謝你的留言！';
+    box.appendChild(thanks);
   });
 
   [title, hint, input, send, status].forEach(function (el) { box.appendChild(el); });

@@ -56,7 +56,10 @@ function sendOnce(sheetName, payload) {
   return fetch(GAS_WEB_APP_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ secret: GAS_SHARED_SECRET, sheet: sheetName, payload: payload })
+    body: JSON.stringify({ secret: GAS_SHARED_SECRET, sheet: sheetName, payload: payload }),
+    // 留言送出後玩家可能馬上關掉頁面；keepalive 讓請求在頁面關閉後仍會送完。
+    // 只用在留言：留言是填回同一格，就算重送也不會多出一列。
+    keepalive: sheetName === 'feedback'
   }).then(function (res) {
     return res.json();
   });
