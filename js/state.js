@@ -12,6 +12,7 @@ export function createInitialState() {
     survivalIndex: null,
     dimensions: null,
     isAdvancing: false,
+    playId: '',
     hasSubmitted: false,
     hasSubmitError: false
   };
@@ -65,8 +66,17 @@ export function generateExperimentCode() {
   return 'ENGINEER_' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 }
 
+// 每一次闖關一個紀錄編號：作答先寫進「問卷回答」，之後在任務完成頁留言時，
+// 試算表用這個編號找到同一列，把留言填進「意見回饋」欄。
+export function generatePlayId(now) {
+  var stamp = (now || Date.now()).toString(36).toUpperCase();
+  var rand = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return 'ESL-' + stamp + '-' + rand;
+}
+
 export function recordRegistration(state, profile) {
   var now = new Date().toISOString();
+  state.playId = generatePlayId();
   state.nickname = (profile.nickname || '').trim() || generateExperimentCode();
   state.email = (profile.email || '').trim();
   // Stored as a record rather than a bare boolean: which version of the

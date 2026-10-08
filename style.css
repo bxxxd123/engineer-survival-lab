@@ -32,6 +32,10 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+}
+
+/* 底色只放在 html；body 若也有底色會蓋住下面的 .bg-layer */
+html {
   background-color: var(--sv-bg);
 }
 
@@ -42,6 +46,16 @@ body {
   line-height: 1.7;
   display: flex;
   justify-content: center;
+}
+
+/* 背景放在獨立的固定圖層，不用 background-attachment: fixed。
+   桌機瀏覽器遇到 fixed 背景，畫面有動畫（雷達掃描）時會整頁重繪，
+   打字會卡；手機瀏覽器本來就忽略 fixed，所以只有桌機會卡。 */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(ellipse at 50% -10%, rgba(198, 255, 26, 0.12), transparent 55%),
     radial-gradient(ellipse at 100% 100%, rgba(255, 185, 40, 0.07), transparent 50%),
@@ -50,7 +64,7 @@ body {
     linear-gradient(90deg, rgba(198, 255, 26, 0.035) 1px, transparent 1px),
     linear-gradient(var(--sv-bg), var(--sv-bg-2));
   background-size: auto, auto, auto, 32px 32px, 32px 32px, auto;
-  background-attachment: fixed;
+  will-change: transform;
 }
 
 /* 掃描線，整站淡淡一層 */
@@ -62,6 +76,7 @@ body::after {
   z-index: 60;
   background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
   opacity: 0.5;
+  will-change: transform;
 }
 
 /* 頂部示警條 */
@@ -349,6 +364,7 @@ button {
   border-radius: 50%;
   background: conic-gradient(from 0deg, color-mix(in srgb, var(--radar) 35%, transparent), transparent 70deg, transparent 360deg);
   animation: radarSweep 3.6s linear infinite;
+  will-change: transform;
 }
 
 @keyframes radarSweep {
@@ -510,7 +526,8 @@ button {
 .home-input,
 .feedback-input {
   width: 100%;
-  font-family: inherit;
+  /* 系統內建中文字體：打字時不用等網路字體下載新的字，桌機打中文才不會卡 */
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
   font-size: 16px;
   color: var(--sv-text);
   background: rgba(3, 5, 6, 0.7);
@@ -958,6 +975,29 @@ button {
 
 .options-grid--cards .option-visual {
   min-height: 34px;
+}
+
+/* 選「其他」時出現的選填輸入框 */
+.free-text {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.level-actions--free-text {
+  background: linear-gradient(180deg, rgba(8, 11, 12, 0) 0%, rgba(8, 11, 12, 0.96) 22%);
+}
+
+.free-text-input {
+  height: 48px;
+  padding: 0 64px 0 14px;
+}
+
+.free-text .home-field-tag {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* 兩欄網格選項是單數時，最後一個（通常是「其他」）佔滿整排 */
@@ -1755,6 +1795,21 @@ body.notice-open { overflow: hidden; }
   overflow-y: auto;
 }
 
+/* 接續進度的詢問視窗 */
+.resume-sheet {
+  max-width: 380px;
+  align-items: center;
+  text-align: center;
+  padding: 22px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+.resume-text {
+  margin: -4px 0 6px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--sv-muted);
+}
+
 .share-header {
   display: flex;
   align-items: center;
@@ -1829,6 +1884,22 @@ body.notice-open { overflow: hidden; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.share-menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.share-menu[hidden] {
+  display: none;
+}
+
+.share-menu .btn-outline {
+  min-height: 44px;
+  padding: 0 6px;
+  font-size: 14px;
 }
 
 .share-action-icon {

@@ -50,7 +50,7 @@ function buildHomeHero() {
   hero.appendChild(radar);
   var img = document.createElement('img');
   img.className = 'home-mascot';
-  img.src = 'assets/mascot/mascot-combat.png';
+  img.src = 'assets/mascot/mascot-combat.webp';
   img.alt = '全副武裝的多角龍';
   hero.appendChild(img);
   hero.appendChild(createEl('div', 'home-hero-ground'));
@@ -217,6 +217,45 @@ export function renderIntro(root, handlers) {
   screen.appendChild(stage);
   screen.appendChild(noticeHost);
   root.appendChild(screen);
+
+  if (handlers.resume) root.appendChild(buildResumeDialog(handlers.resume));
+}
+
+// 上次玩到一半：問要不要接續
+function buildResumeDialog(resume) {
+  var overlay = createEl('div', 'share-overlay resume-overlay');
+  var sheet = createEl('div', 'share-sheet resume-sheet');
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-modal', 'true');
+  sheet.setAttribute('aria-labelledby', 'resume-heading');
+
+  var tag = createEl('p', 'hud-tag');
+  tag.textContent = 'SAVE FOUND';
+  var title = createEl('h2', 'share-title');
+  title.id = 'resume-heading';
+  title.textContent = '要繼續上次的闖關嗎？';
+  var text = createEl('p', 'resume-text');
+  text.textContent = resume.label;
+
+  var go = createEl('button', 'btn-hazard');
+  go.type = 'button';
+  go.textContent = '繼續闖關';
+  go.addEventListener('click', function () {
+    overlay.remove();
+    resume.onResume();
+  });
+  var fresh = createEl('button', 'btn-text');
+  fresh.type = 'button';
+  fresh.textContent = '重新開始';
+  fresh.addEventListener('click', function () {
+    overlay.remove();
+    resume.onDiscard();
+  });
+
+  [tag, title, text, go, fresh].forEach(function (el) { sheet.appendChild(el); });
+  overlay.appendChild(sheet);
+  setTimeout(function () { go.focus(); }, 0);
+  return overlay;
 }
 
 function buildConsentCheckbox(opts) {
@@ -256,9 +295,12 @@ function buildConsentCheckbox(opts) {
   return { row: row, input: input };
 }
 
+// 行銷同意的字句要跟告知事項第八點引用的一字不差
+var MARKETING_CONSENT_TEXT = '我願意收到課程、活動、職缺及職涯相關資訊';
+
 function buildMarketingConsent() {
   return buildConsentCheckbox({
-    parts: ['我願意收到六角課程、學習、活動及職涯相關資訊'],
+    parts: [MARKETING_CONSENT_TEXT],
     tag: '選填'
   });
 }
@@ -316,56 +358,78 @@ function buildPersonalDataNotice(onClose) {
     body.appendChild(sec);
   }
 
+  // 內容依「波利馬個人資料保護法」告知事項（2026-10-07 版）；
+  // 公司名稱、聯絡信箱、保存期間、更新日期在 privacy-config.js。
+  var orgs = [cfg.collectorName].concat(sharedWith);
+  var orgList = orgs.map(function (n) { return orPlaceholder(n); });
+  var mail = orPlaceholder(cfg.contactEmail);
+
   var intro = createEl('p', 'notice-lead');
-  intro.textContent = '為辦理「2026 工程師生存實驗室」活動及提供相關服務，依個人資料保護法相關規定，向您說明下列事項：';
+  intro.textContent = '為辦理「2026 工程師生存實驗室」活動及提供相關服務，' + orgList.join('及') + '依《個人資料保護法》相關規定，向您說明下列事項：';
   body.appendChild(intro);
 
-  section('一、蒐集單位', [orPlaceholder(cfg.collectorName)]);
+  section('一、蒐集單位', ['本活動個人資料蒐集及利用單位為：', orgList, '以下合稱「主辦單位」。']);
 
-  section('二、蒐集目的', ['蒐集資料將用於：', [
-    '辦理「2026 工程師生存實驗室」活動',
-    '活動參與及必要聯繫',
-    '產生個人化工程師生存測驗結果及生存卡',
-    '工程師職涯、工作狀態、AI 使用與相關趨勢之統計分析',
-    '如您另行同意接收相關資訊，將用於寄送工程師學習、課程、講座、活動、職涯發展及相關服務資訊'
+  section('二、蒐集目的', ['主辦單位蒐集之資料將用於下列目的：', [
+    '辦理「2026 工程師生存實驗室」活動。',
+    '活動參與、線上報到及必要聯繫。',
+    '產生個人化工程師生存測驗結果及生存卡。',
+    '進行工程師職涯、工作狀態、AI 使用情形及相關趨勢之統計與分析。',
+    '如您另行同意接收相關資訊，' + orgList[0] + '得透過電子郵件提供工程師學習、課程、講座、活動及相關服務資訊。',
+    '如您另行同意接收相關資訊，' + (orgList[1] || orgList[0]) + '得依您提供之資料及職涯需求，提供職缺、人才媒合、職涯發展建議及相關職涯服務資訊。'
   ]]);
 
-  section('三、蒐集之個人資料類別', ['本活動可能蒐集：', [
-    '暱稱／實驗代號',
-    '電子郵件地址',
-    '本活動問卷及測驗作答資料',
-    '活動參與及系統必要紀錄'
+  section('三、蒐集之個人資料類別', ['本活動可能蒐集下列資料：', [
+    '暱稱／實驗代號。',
+    '電子郵件地址。',
+    '本活動問卷及測驗作答資料。',
+    '求職狀態，以及您自行選擇是否接收課程、活動、職缺及職涯相關資訊之意願。',
+    '活動參與及系統運作所必要之紀錄。'
   ]]);
 
-  section('四、個人資料來源', ['由您本人於「2026 工程師生存實驗室」活動頁面直接提供。']);
+  section('四、個人資料來源', ['上述資料由您本人於「2026 工程師生存實驗室」活動頁面直接提供。']);
 
   section('五、個人資料利用之期間、地區、對象及方式', [
-    '期間：' + orPlaceholder(cfg.retentionPeriod),
-    '地區：中華民國（臺灣）及提供本服務所必要之資訊系統或雲端服務所在地區。',
-    '對象：' + (sharedWith.length
-      ? sharedWith.join('、') + '，以及為提供本活動、資訊系統、電子郵件寄送等服務所必要之受託服務提供者。'
-      : orPlaceholder(cfg.collectorName) + '，以及為提供本活動、資訊系統、電子郵件寄送等服務所必要之受託服務提供者。'),
-    '方式：以自動化或非自動化方式進行蒐集、處理、統計分析、活動聯繫及其他符合上述蒐集目的之利用。'
+    '1. 利用期間',
+    '本活動之報到、問卷、測驗及相關活動資料，' + orPlaceholder(cfg.retentionPeriod) + '；保存期間屆滿或蒐集目的消失後，依相關規定停止利用或刪除。',
+    '如您另行同意接收課程、活動、職涯或人才媒合相關資訊，相關聯絡資料得利用至您撤回同意、取消訂閱，或相關服務及蒐集目的消失為止。',
+    '法令另有保存規定者，依相關法令規定辦理。',
+    '2. 利用地區',
+    '中華民國（臺灣），以及提供本活動所必要之資訊系統、電子郵件寄送或雲端服務所在地區。',
+    '3. 利用對象',
+    orgList.concat(['為提供本活動、資訊系統、資料儲存、電子郵件寄送及相關服務所必要之受託服務提供者。']),
+    '4. 利用方式',
+    '以自動化或非自動化方式進行個人資料之蒐集、處理及利用，包括活動報到、測驗結果產生、統計分析、活動聯繫，以及依您所選擇之同意項目提供課程、活動、職涯或人才媒合相關資訊。'
   ]);
 
-  section('六、當事人權利', ['您得依個人資料保護法相關規定，就您的個人資料行使：', [
-    '查詢或請求閱覽',
-    '請求製給複製本',
-    '請求補充或更正',
-    '請求停止蒐集、處理或利用',
-    '請求刪除'
-  ], '如需行使上述權利，請聯絡：' + orPlaceholder(cfg.contactEmail)]);
+  section('六、當事人權利', ['您得依《個人資料保護法》相關規定，就您的個人資料行使下列權利：', [
+    '查詢或請求閱覽。',
+    '請求製給複製本。',
+    '請求補充或更正。',
+    '請求停止蒐集、處理或利用。',
+    '請求刪除。'
+  ], '如需行使上述權利，請聯絡：' + mail, '主辦單位將依相關法令及內部作業程序處理。']);
 
   section('七、不提供個人資料之影響', [
-    '暱稱為選填；如未提供，系統將以隨機實驗代號顯示於生存卡。',
-    'Email 為本活動所設定之必要資料；如不提供 Email，將無法完成本活動的線上報到及進入測驗。',
-    '是否同意接收工程師課程、學習、活動及職涯相關資訊為自由選擇；不同意不影響您參與本次活動及取得測驗結果。'
+    '暱稱／實驗代號為選填。如未提供，系統得以隨機實驗代號顯示於您的生存卡。',
+    'Email 為本活動線上報到之必要資料。如不提供 Email，將無法完成本活動之線上報到及進入測驗。',
+    '是否同意接收課程、活動、職缺及職涯相關資訊，由您自由選擇。',
+    '未勾選上述選填項目，不影響您參與本次活動、完成測驗及取得工程師生存卡。'
   ]);
 
-  section('八、課程及相關資訊', [
-    '如您另外勾選「我願意收到六角課程、學習、活動及職涯相關資訊」，我們將依您的同意，透過電子郵件寄送相關內容。',
-    '您可以隨時透過電子郵件中的「取消訂閱」功能，或聯絡 ' + orPlaceholder(cfg.contactEmail) + '，停止接收相關資訊。',
-    '取消訂閱不影響您參與本次活動及已取得之生存卡。'
+  section('八、課程、活動資訊及人才媒合', [
+    '如您勾選「' + MARKETING_CONSENT_TEXT + '」，即表示您同意主辦單位依本告知事項所載方式，提供下列資訊：',
+    [
+      orgList[0] + '：透過電子郵件提供工程師學習、課程、講座、活動及相關服務資訊。',
+      (orgList[1] || orgList[0]) + '：依您提供之資料及職涯需求，提供職缺、人才媒合、職涯發展建議、產業與人才市場趨勢及相關職涯服務資訊。'
+    ],
+    '您可隨時透過電子郵件中的「取消訂閱」功能，或聯絡 ' + mail + '，停止接收上述資訊或提出停止利用之要求。',
+    '本項為自由選擇，未勾選或日後取消，不影響您參與本次活動或已取得之測驗結果及生存卡。'
+  ]);
+
+  section('九、其他說明', [
+    '主辦單位將於蒐集目的必要範圍內處理及利用您的個人資料，並採取適當之安全維護措施。',
+    '如本告知事項內容因活動內容、服務方式或法令要求而有所調整，將於活動頁面公告更新版本。'
   ]);
 
   var updated = createEl('p', 'notice-updated');
@@ -452,7 +516,7 @@ function buildTrail(question, state) {
 
   var walker = document.createElement('img');
   walker.className = 'trail-walker';
-  walker.src = 'assets/mascot/mascot-walk.png';
+  walker.src = 'assets/mascot/mascot-walk.webp';
   walker.alt = '';
   var from = lastTrailPosition === null ? position : lastTrailPosition;
   walker.style.left = trailPercent(from) + '%';
@@ -488,6 +552,44 @@ export function renderLevel(root, question, state, handlers) {
 
   screen.appendChild(buildOptionsGrid(question, state, handlers));
 
+  // 「其他」這類選項：不自動跳題，給一個選填輸入框和下一關按鈕
+  var picked = question.type === 'single'
+    ? question.options.filter(function (o) { return o.value === state.answers[question.id]; })[0]
+    : null;
+  var freeTextBar = null;
+  if (picked && picked.freeText && !state.isAdvancing) {
+    var freeWrap = createEl('div', 'free-text');
+    var freeInput = document.createElement('input');
+    freeInput.type = 'text';
+    freeInput.className = 'home-input free-text-input';
+    freeInput.placeholder = picked.freeText;
+    freeInput.maxLength = 30;
+    freeInput.value = state.answers[question.id + 'Other'] || '';
+    freeInput.setAttribute('aria-label', picked.freeText);
+    freeInput.addEventListener('input', function () { handlers.onFreeText(freeInput.value); });
+    freeInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); handlers.onMultiNext(); }
+    });
+    var freeTag = createEl('span', 'home-field-tag');
+    freeTag.textContent = '選填';
+    freeWrap.appendChild(freeInput);
+    freeWrap.appendChild(freeTag);
+    setTimeout(function () {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      freeInput.focus({ preventScroll: true });
+    }, 0);
+
+    // Input rides in the pinned bottom bar with the button, so it is never
+    // hidden behind it.
+    freeTextBar = createEl('div', 'level-actions level-actions--free-text');
+    freeTextBar.appendChild(freeWrap);
+    var freeNext = createEl('button', 'btn-hazard');
+    freeNext.type = 'button';
+    freeNext.textContent = '下一關';
+    freeNext.addEventListener('click', handlers.onMultiNext);
+    freeTextBar.appendChild(freeNext);
+  }
+
   if (state.levelIndex > 0) {
     var backBtn = createEl('button', 'btn-back');
     backBtn.type = 'button';
@@ -513,6 +615,8 @@ export function renderLevel(root, question, state, handlers) {
     bar.appendChild(nextBtn);
     screen.appendChild(bar);
   }
+
+  if (freeTextBar) screen.appendChild(freeTextBar);
 
   root.appendChild(screen);
 }
@@ -662,7 +766,7 @@ export function renderCalculating(root) {
   var radar = createEl('div', 'calc-radar');
   radar.setAttribute('aria-hidden', 'true');
   var radarImg = document.createElement('img');
-  radarImg.src = 'assets/mascot/mascot-combat.png';
+  radarImg.src = 'assets/mascot/mascot-combat.webp';
   radarImg.alt = '';
   radar.appendChild(radarImg);
   screen.appendChild(radar);
@@ -997,6 +1101,7 @@ export function renderShareSheet(host, options) {
   document.body.classList.add('notice-open');
 
   var objectUrl = null;
+  var shareMenu = null;
 
   function actionButton(className, icon, label, onClick) {
     var btn = createEl('button', className);
@@ -1017,13 +1122,23 @@ export function renderShareSheet(host, options) {
       img.alt = '我的工程師生存卡';
       preview.appendChild(img);
 
-      if (options.canShare) {
-        actions.appendChild(actionButton('btn-hazard share-action-main', UI_ICONS.share, '分享給好友', handlers.onShare));
-      }
+      actions.appendChild(actionButton('btn-hazard share-action-main', UI_ICONS.share, '分享給好友', handlers.onShare));
+
+      // Browsers without a native share sheet (desktop, LINE/FB in-app) get
+      // these instead when 分享給好友 is pressed.
+      shareMenu = createEl('div', 'share-menu');
+      shareMenu.hidden = true;
+      shareMenu.appendChild(actionButton('btn-outline share-menu-line', UI_ICONS.share, 'LINE', handlers.onShareLine));
+      shareMenu.appendChild(actionButton('btn-outline', UI_ICONS.share, 'Facebook', handlers.onShareFacebook));
+      actions.appendChild(shareMenu);
+
       var row = createEl('div', 'share-action-row');
       row.appendChild(actionButton('btn-outline', UI_ICONS.download, '下載生存卡', handlers.onDownload));
       row.appendChild(actionButton('btn-outline', UI_ICONS.link, '複製遊戲連結', handlers.onCopy));
       actions.appendChild(row);
+    },
+    showShareMenu: function () {
+      if (shareMenu) shareMenu.hidden = false;
     },
     flash: function (message) {
       toast.textContent = message;
@@ -1086,7 +1201,7 @@ export function renderDone(root, data, options) {
 function buildFeedbackBox(onFeedback) {
   var box = createEl('div', 'feedback-box');
   var title = createEl('h3', 'feedback-title');
-  title.textContent = '想對六角說什麼？';
+  title.textContent = '想要對六角或多角說什麼？';
   var hint = createEl('p', 'feedback-hint');
   hint.textContent = '想學什麼、對課程有疑問，或卡在什麼程式問題，都可以留言給我們（選填）';
   var input = document.createElement('textarea');

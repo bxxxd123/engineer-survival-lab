@@ -20,7 +20,7 @@ export var COURSES = {
   starterCamp: { name: '30 天軟體工程師體驗營', url: BASE + '/courses/software-engineer-camping.html' },
   backendTraining: { name: 'Node.js+雲端：後端就業培訓班', url: BASE + '/courses/backend-training.html' },
   cloudTraining: { name: '雲端架構部署直播班', url: BASE + '/courses/cloud_training.html' },
-  frontendTraining: { name: 'JS+Vue 前端工程師培訓班', url: BASE + '/courses/frontend-training.html', image: 'assets/courses/frontend-training.jpg' },
+  frontendTraining: { name: 'JS+Vue 前端工程師培訓班', url: BASE + '/courses/frontend-training.html', image: 'assets/courses/frontend-training.webp' },
   typescript: { name: 'TypeScript 實戰課', url: BASE + '/courses/typescript-training.html' },
   react: { name: 'React 作品實戰班', url: BASE + '/courses/react-training.html' },
   jsCore: { name: 'JavaScript 核心篇', url: BASE + '/courses/js-core.html' },

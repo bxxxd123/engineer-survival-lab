@@ -17,7 +17,8 @@ export const QUESTIONS = [
       { value: 'qa', label: 'QA / 測試', emoji: '🔍' },
       { value: 'designer', label: 'UI/UX 設計師', emoji: '🖌️' },
       { value: 'student', label: '學生／轉職中', emoji: '🎓' },
-      { value: 'other', label: '其他', emoji: '✨' }
+      // 選了不會自動跳題，下方出現選填輸入框讓玩家寫自己的職業
+      { value: 'other', label: '其他', emoji: '✨', freeText: '你的職業是？例如：PM、行銷、HR' }
     ]
   },
   {
@@ -30,11 +31,11 @@ export const QUESTIONS = [
     characterMood: 'idea',
     prompt: '你在這行生存幾年了？',
     options: [
-      { value: 'lt1', rank: 1, label: '未滿1年', emoji: '🌱', image: 'assets/growth/growth-01-sprout.png', personaPoints: { careerDebugger: 1 } },
-      { value: '1to3', rank: 2, label: '1–3年', emoji: '🌿', image: 'assets/growth/growth-02-plant.png', personaPoints: { careerDebugger: 1 } },
-      { value: '3to5', rank: 3, label: '3–5年', emoji: '🌳', image: 'assets/growth/growth-03-tree.png', personaPoints: { radarWatcher: 1 } },
-      { value: '5to10', rank: 4, label: '5–10年', emoji: '🌲', image: 'assets/growth/growth-04-big-tree.png', personaPoints: { stableGrowth: 1 } },
-      { value: 'gt10', rank: 5, label: '10年以上', emoji: '🏔️', image: 'assets/growth/growth-05-skill-tree.png', personaPoints: { stableGrowth: 2 } }
+      { value: 'lt1', rank: 1, label: '未滿1年', emoji: '🌱', image: 'assets/growth/growth-01-sprout.webp', personaPoints: { careerDebugger: 1 } },
+      { value: '1to3', rank: 2, label: '1–3年', emoji: '🌿', image: 'assets/growth/growth-02-plant.webp', personaPoints: { careerDebugger: 1 } },
+      { value: '3to5', rank: 3, label: '3–5年', emoji: '🌳', image: 'assets/growth/growth-03-tree.webp', personaPoints: { radarWatcher: 1 } },
+      { value: '5to10', rank: 4, label: '5–10年', emoji: '🌲', image: 'assets/growth/growth-04-big-tree.webp', personaPoints: { stableGrowth: 1 } },
+      { value: 'gt10', rank: 5, label: '10年以上', emoji: '🏔️', image: 'assets/growth/growth-05-skill-tree.webp', personaPoints: { stableGrowth: 2 } }
     ]
   },
   {
@@ -122,14 +123,14 @@ export const QUESTIONS = [
     // which bugs, not that this one question should outweigh every other.
     blendMultiScores: true,
     options: [
-      { value: 'salary', label: '薪資卡住', emoji: '🐛', image: 'assets/bugs/bug-salary.png', personaPoints: { careerDebugger: 2 }, dimensionValues: { careerBugIndex: 4 } },
-      { value: 'boss', label: '主管問題', emoji: '🐛', image: 'assets/bugs/bug-boss.png', personaPoints: { careerDebugger: 2 }, dimensionValues: { careerBugIndex: 5 } },
-      { value: 'hours', label: '工時太長', emoji: '🐛', image: 'assets/bugs/bug-workload.png', personaPoints: { careerDebugger: 1, jobHopper: 1 }, dimensionValues: { careerBugIndex: 4 } },
-      { value: 'skill', label: '技術焦慮', emoji: '🐛', image: 'assets/bugs/bug-technology.png', personaPoints: { careerDebugger: 1, aiEvolved: -1 }, dimensionValues: { careerBugIndex: 3 } },
-      { value: 'promotion', label: '升遷卡關', emoji: '🐛', image: 'assets/bugs/bug-promotion.png', personaPoints: { careerDebugger: 1, radarWatcher: 1 }, dimensionValues: { careerBugIndex: 3 } },
-      { value: 'noOpportunity', label: '沒好機會', emoji: '🐛', image: 'assets/bugs/bug-noopportunity.png', personaPoints: { jobHopper: 1, careerDebugger: 1 }, dimensionValues: { careerBugIndex: 4 } },
-      { value: 'aiAnxiety', label: 'AI焦慮', emoji: '🐛', image: 'assets/bugs/bug-ai.png', personaPoints: { careerDebugger: 2, aiEvolved: -2 }, dimensionValues: { careerBugIndex: 5 } },
-      { value: 'noBug', label: '目前沒什麼Bug', emoji: '✨', image: 'assets/bugs/bug-noBug.png', personaPoints: { stableGrowth: 2 }, dimensionValues: { careerBugIndex: 1 } }
+      { value: 'salary', label: '薪資卡住', emoji: '🐛', image: 'assets/bugs/bug-salary.webp', personaPoints: { careerDebugger: 2 }, dimensionValues: { careerBugIndex: 4 } },
+      { value: 'boss', label: '主管問題', emoji: '🐛', image: 'assets/bugs/bug-boss.webp', personaPoints: { careerDebugger: 2 }, dimensionValues: { careerBugIndex: 5 } },
+      { value: 'hours', label: '工時太長', emoji: '🐛', image: 'assets/bugs/bug-workload.webp', personaPoints: { careerDebugger: 1, jobHopper: 1 }, dimensionValues: { careerBugIndex: 4 } },
+      { value: 'skill', label: '技術焦慮', emoji: '🐛', image: 'assets/bugs/bug-technology.webp', personaPoints: { careerDebugger: 1, aiEvolved: -1 }, dimensionValues: { careerBugIndex: 3 } },
+      { value: 'promotion', label: '升遷卡關', emoji: '🐛', image: 'assets/bugs/bug-promotion.webp', personaPoints: { careerDebugger: 1, radarWatcher: 1 }, dimensionValues: { careerBugIndex: 3 } },
+      { value: 'noOpportunity', label: '沒好機會', emoji: '🐛', image: 'assets/bugs/bug-noopportunity.webp', personaPoints: { jobHopper: 1, careerDebugger: 1 }, dimensionValues: { careerBugIndex: 4 } },
+      { value: 'aiAnxiety', label: 'AI焦慮', emoji: '🐛', image: 'assets/bugs/bug-ai.webp', personaPoints: { careerDebugger: 2, aiEvolved: -2 }, dimensionValues: { careerBugIndex: 5 } },
+      { value: 'noBug', label: '目前沒什麼Bug', emoji: '✨', image: 'assets/bugs/bug-noBug.webp', personaPoints: { stableGrowth: 2 }, dimensionValues: { careerBugIndex: 1 } }
     ]
   },
   {
@@ -209,14 +210,14 @@ export const QUESTIONS = [
     characterMood: 'trophy',
     prompt: '2027 你最想解鎖什麼成就？',
     options: [
-      { value: 'raise', label: '加薪', emoji: '💰', image: 'assets/badges/badge-salary.png', personaPoints: { careerDebugger: 1 } },
-      { value: 'switchJob', label: '跳槽', emoji: '🚪', image: 'assets/badges/badge-job-change.png', personaPoints: { jobHopper: 2 } },
-      { value: 'senior', label: '升Senior', emoji: '⭐', image: 'assets/badges/badge-senior.png', personaPoints: { radarWatcher: 1 } },
-      { value: 'foreign', label: '進外商', emoji: '🌍', image: 'assets/badges/badge-global.png', personaPoints: { radarWatcher: 1, jobHopper: 1 } },
-      { value: 'remote', label: '全遠端', emoji: '🏡', image: 'assets/badges/badge-remote.png', personaPoints: { stableGrowth: 1 } },
-      { value: 'switchToAI', label: '轉AI', emoji: '🤖', image: 'assets/badges/badge-ai.png', personaPoints: { aiEvolved: 2 } },
-      { value: 'techLevelUp', label: '技術大升級', emoji: '🧠', image: 'assets/badges/badge-tech-levelup.png', personaPoints: { aiEvolved: 1, stableGrowth: 1 } },
-      { value: 'wlb', label: 'WLB', emoji: '⚖️', image: 'assets/badges/badge-work-life-balance.png', personaPoints: { stableGrowth: 1, careerDebugger: 1 } }
+      { value: 'raise', label: '加薪', emoji: '💰', image: 'assets/badges/badge-salary.webp', personaPoints: { careerDebugger: 1 } },
+      { value: 'switchJob', label: '跳槽', emoji: '🚪', image: 'assets/badges/badge-job-change.webp', personaPoints: { jobHopper: 2 } },
+      { value: 'senior', label: '升Senior', emoji: '⭐', image: 'assets/badges/badge-senior.webp', personaPoints: { radarWatcher: 1 } },
+      { value: 'foreign', label: '進外商', emoji: '🌍', image: 'assets/badges/badge-global.webp', personaPoints: { radarWatcher: 1, jobHopper: 1 } },
+      { value: 'remote', label: '全遠端', emoji: '🏡', image: 'assets/badges/badge-remote.webp', personaPoints: { stableGrowth: 1 } },
+      { value: 'switchToAI', label: '轉AI', emoji: '🤖', image: 'assets/badges/badge-ai.webp', personaPoints: { aiEvolved: 2 } },
+      { value: 'techLevelUp', label: '技術大升級', emoji: '🧠', image: 'assets/badges/badge-tech-levelup.webp', personaPoints: { aiEvolved: 1, stableGrowth: 1 } },
+      { value: 'wlb', label: 'WLB', emoji: '⚖️', image: 'assets/badges/badge-work-life-balance.webp', personaPoints: { stableGrowth: 1, careerDebugger: 1 } }
     ]
   }
 ];

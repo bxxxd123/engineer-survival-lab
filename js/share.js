@@ -132,6 +132,18 @@ export function shareCard(blob, text, url) {
   });
 }
 
+// Link-only share pages for browsers without a native share sheet.
+export function shareLinkUrl(service, text) {
+  if (service === 'line') {
+    return 'https://line.me/R/msg/text/?' + encodeURIComponent(text + '\n' + GAME_URL);
+  }
+  return 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(GAME_URL);
+}
+
+export function canNativeShare() {
+  return Boolean(navigator.share);
+}
+
 export function downloadCard(blob) {
   var url = URL.createObjectURL(blob);
   var link = document.createElement('a');

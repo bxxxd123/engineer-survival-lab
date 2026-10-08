@@ -66,23 +66,25 @@
 
 ## 5. 圖片素材
 
-全部是同一套**扁平向量、無外框、科技末世**風格，背景透明，用同一隻綠色龍。新增圖片時，請用 Codex 圖片生成並參考 `assets/mascot/ref/mascot-combat-reference.png` 的風格。
+全部是同一套**扁平向量、無外框、科技末世**風格，背景透明，用同一隻綠色龍（職涯卡點小怪物是黃綠色像素風）。新增圖片時，請用 Codex 圖片生成，風格參考 `assets-source/mascot/ref/`。
 
-| 資料夾 | 內容 | 輸出尺寸 |
+**網站實際載入的是 `assets/` 裡的 WebP 小圖**，原始的大張 PNG 放在 `assets-source/`（網站不會載入，留著之後修改用）。新增或修改圖片時：大圖放進 `assets-source/`，再輸出成下表尺寸的 WebP 放進 `assets/`。
+
+| 檔案 | 用途 | WebP 最長邊 |
 |---|---|---|
-| `assets/mascot/mascot-combat.png` | 首頁、分析中的主角（持光槍備戰） | 720px |
-| `assets/mascot/mascot-walk.png` | 進度路線上走路的小龍 | 192px |
-| `assets/mascot/persona-*.png` | 5 種人設的吉祥物（生存報告、生存卡、任務完成） | 640px |
-| `assets/bugs/` | 8 隻職涯卡點機械 bug | 320px |
-| `assets/growth/` | 5 階段年資科技植物 | 320px |
-| `assets/badges/` | 8 個 2027 成就六角徽章 | 320px |
-| `assets/brand/` | 六角、多角 logo（白色 SVG）、遊戲 QR code | — |
+| `assets/mascot/mascot-combat.webp` | 首頁、分析中的主角 | 640px |
+| `assets/mascot/mascot-walk.webp` | 進度路線上走路的小龍 | 128px |
+| `assets/mascot/persona-*.webp` | 5 種人設吉祥物（生存報告、生存卡、任務完成） | 480px |
+| `assets/bugs/` | 8 隻職涯卡點小怪物 | 192px |
+| `assets/growth/` | 5 階段年資科技植物 | 160px |
+| `assets/badges/` | 8 個 2027 成就徽章 | 192px |
+| `assets/courses/` | 課程縮圖（4:3） | 480px |
+| `assets/brand/` | 六角、多角 logo（SVG）、遊戲 QR code | — |
 
-- 圖片裡**不要有文字**，文字一律由網頁或 canvas 自己排。
+- 首頁一打開，就會在背景先下載後面所有題目和結果頁的圖，答題時不用等圖。
+- 圖片裡**不要有文字**，文字一律由網頁或生存卡自己排。
 - AI 工具（ChatGPT、Claude…）用的是品牌官方圖示，不改畫風，只統一外面的方框。
 - 線條圖示（`js/icons.js`）用 `currentColor`，在選項卡裡自動變成螢光綠。
-
----
 
 ## 6. 版面
 
@@ -99,3 +101,11 @@
 
 課程縮圖放在 `assets/courses/`（建議 480×360、4:3、不放小字），在 `js/courses.js` 的課程表加 `image` 欄位才會顯示。還沒有縮圖的課程：本機預覽（localhost）會顯示灰色虛線框「課程圖」標出位置，正式網站則只顯示文字卡，不會出現空框。
 
+
+---
+
+## 8. 互動細節
+
+- **分享給好友**：手機支援內建分享時，跳出系統分享選單（附生存卡圖片和遊戲連結）；不支援時（桌機、LINE／FB 內建瀏覽器），按下後展開 LINE、Facebook 兩個分享按鈕（只分享連結）。分享、下載、複製連結任一項都算完成任務。
+- **進度保存**：闖關中和生存報告頁的進度存在玩家手機裡，30 分鐘內回來，首頁會問「要繼續上次的闖關嗎？」。完成任務或按「重新開始」就清掉。
+- **震動**（只有 Android 有效，iPhone 不支援）：狙擊鎖定 bug 時短震、生存報告出爐時兩下、完成任務時一長一短。

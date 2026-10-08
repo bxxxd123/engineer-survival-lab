@@ -8,27 +8,26 @@
 export const PRIVACY_CONFIG = {
   // 依法實際蒐集資料的公司／商號完整名稱。
   // 例：「多角人才顧問有限公司」
-  collectorName: '',
+  collectorName: '波利馬資訊科技有限公司（六角學院）',
 
-  // 如果資料會提供給「不同法人」使用（例如六角學院和多角人才是兩家公司），
-  // 兩家都要列出來。只有一家就只填一個，陣列留空代表只有上面那家。
+  // 共同蒐集、利用資料的其他公司（告知事項裡的第二家）。
   // 例：['六角學院', '多角人才顧問有限公司']
-  sharedWith: [],
+  sharedWith: ['多角人才顧問有限公司'],
 
   // 個人資料的保存期間。
   // 例：「自活動結束日起 2 年」
-  retentionPeriod: '',
+  retentionPeriod: '自蒐集日起保存 2 年',
 
   // 當事人要行使查詢、更正、刪除等權利時的聯絡信箱。
-  contactEmail: '',
+  contactEmail: 'service@hexschool.com',
 
   // 告知事項的最後更新日期，顯示在彈窗底部。
   // 例：'2026 / 10 / 15'
-  lastUpdated: '',
+  lastUpdated: '2026 年 10 月 7 日',
 
   // 同意書版本。每次修改上面的告知內容，請同步改這個版本字串，
   // 之後才分得出某一筆同意是針對哪一版本給的。
-  noticeVersion: '2026-survival-lab-v1'
+  noticeVersion: '2026-survival-lab-v2'
 };
 
 // 沒填的欄位統一顯示成這個，避免畫面出現空白讓人以為是壞掉。
