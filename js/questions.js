@@ -173,18 +173,25 @@ export const QUESTIONS = [
     ]
   },
   {
-    id: 'aiImpact',
+    id: 'aiSpend',
     level: 10,
     type: 'single',
-    visualStyle: 'scenario',
+    visualStyle: 'coins',
+    // 有高低順序的題目：手機上改成垂直清單，右邊用等級格標出程度
+    layout: 'ladder',
     characterMood: 'ai',
-    prompt: 'AI 讓你最有感的是？',
+    prompt: '這個月，你在 AI 上課金了嗎？',
+    subtitle: '每月固定訂閱費，新台幣',
     options: [
-      { value: 'faster', label: '開發變快', emoji: '⚡', personaPoints: { aiEvolved: 2 }, dimensionValues: { aiAdapt: 5 } },
-      { value: 'learning', label: '學習變快', emoji: '📚', personaPoints: { aiEvolved: 2 }, dimensionValues: { aiAdapt: 5 } },
-      { value: 'changed', label: '工作內容改變', emoji: '🔄', personaPoints: { aiEvolved: 1, radarWatcher: 1 }, dimensionValues: { aiAdapt: 4 } },
-      { value: 'worried', label: '開始擔心被取代', emoji: '😰', personaPoints: { careerDebugger: 2, aiEvolved: -1 }, dimensionValues: { aiAdapt: 2 } },
-      { value: 'noDiff', label: '沒什麼差', emoji: '🤷', personaPoints: { stableGrowth: 1 }, dimensionValues: { aiAdapt: 3 } }
+      // 刻意不給 personaPoints 和 dimensionValues：不應該因為「沒付錢」就扣作答者的分數
+      // （只用免費版也可能用得很重，或是公司幫忙付）。
+      { value: 'none', rank: 1, label: '沒有，只用免費版', emoji: '🆓' },
+      { value: 'under700', rank: 2, label: '700 元以內', emoji: '🪙', personaPoints: { aiEvolved: 1 }, dimensionValues: { aiAdapt: 4 } },
+      { value: '700to2000', rank: 3, label: '700–2000 元', emoji: '🪙', personaPoints: { aiEvolved: 2 }, dimensionValues: { aiAdapt: 5 } },
+      { value: '2000to5000', rank: 4, label: '2000–5000 元', emoji: '🪙', personaPoints: { aiEvolved: 2 }, dimensionValues: { aiAdapt: 5 } },
+      { value: 'over5000', rank: 5, label: '5000 元以上', emoji: '💎', personaPoints: { aiEvolved: 3 }, dimensionValues: { aiAdapt: 5 } },
+      // 不是金額，放在分隔線下方
+      { value: 'company', offScale: true, label: '公司出錢', emoji: '🏢', personaPoints: { aiEvolved: 1 }, dimensionValues: { aiAdapt: 4 } }
     ]
   },
   {

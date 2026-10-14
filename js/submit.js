@@ -15,7 +15,7 @@ export function submitResponse(player, answers, persona, survivalIndex) {
     careerBug: (answers.careerBug || []).join('、'),
     aiFrequency: answers.aiFrequency || '',
     aiTools: (answers.aiTools || []).join('、'),
-    aiImpact: answers.aiImpact || '',
+    aiSpend: answers.aiSpend || '',
     aiFear: answers.aiFear || '',
     goal2027: answers.goal2027 || '',
     persona: persona || '',

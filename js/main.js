@@ -10,7 +10,7 @@ import { recommendCourse, COURSES } from './courses.js';
 
 var SINGLE_SELECT_FIELDS = [
   'role', 'experience', 'satisfaction', 'salary', 'headhunterReaction',
-  'jumpThreshold', 'aiFrequency', 'aiImpact', 'aiFear', 'goal2027'
+  'jumpThreshold', 'aiFrequency', 'aiSpend', 'aiFear', 'goal2027'
 ];
 
 var root = document.getElementById('app');

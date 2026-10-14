@@ -6,7 +6,7 @@ var LEADS_SHEET_NAME = '名單';
 var RESPONSES_HEADERS = [
   '時間', '暱稱', 'Email',
   '職業角色', '年資', '工作生存狀態', '薪資', '獵頭反應', '跳槽門檻',
-  '職涯卡點', 'AI使用頻率', 'AI夥伴', 'AI最有感', 'AI最怕', '2027目標',
+  '職涯卡點', 'AI使用頻率', 'AI夥伴', 'AI課金', 'AI最怕', '2027目標',
   '人設', '生存指數', '意見回饋', '紀錄編號'
 ];
 var LEADS_HEADERS = [
@@ -59,7 +59,9 @@ function getSheetWithHeaders(ss, name, headers) {
   var firstRow = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
   var matches = headers.every(function (h, i) { return firstRow[i] === h; });
   if (!matches) {
-    if (sheet.getLastRow() > 0 && firstRow.some(function (v) { return v !== ''; })) {
+    // 第一列是舊版標題（例如欄名改過）就直接覆蓋；是資料才往上插一列標題
+    var isOldHeader = firstRow[0] === headers[0];
+    if (!isOldHeader && sheet.getLastRow() > 0 && firstRow.some(function (v) { return v !== ''; })) {
       sheet.insertRowBefore(1);
     }
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
@@ -83,7 +85,7 @@ function appendResponse(ss, payload) {
     safeCell(payload.careerBug),
     safeCell(payload.aiFrequency),
     safeCell(payload.aiTools),
-    safeCell(payload.aiImpact),
+    safeCell(payload.aiSpend),
     safeCell(payload.aiFear),
     safeCell(payload.goal2027),
     safeCell(payload.persona),

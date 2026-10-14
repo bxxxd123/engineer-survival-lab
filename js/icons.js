@@ -388,45 +388,6 @@ export var OPTION_ICONS = {
     '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
     '<path d="M24 41c-6-2.6-14-8-14-19V11l14-5 14 5v11c0 11-8 16.4-14 19z"/>' +
     '<path d="M17.5 23.5l4.3 4.3 8.7-9.3" stroke-width="2"/>' +
-    '</svg>',
-
-  'aiImpact:faster':
-    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<line x1="6" y1="24" x2="16" y2="24" stroke-width="2.2" opacity="0.5"/>' +
-    '<line x1="6" y1="16" x2="22" y2="16" stroke-width="2.2" opacity="0.35"/>' +
-    '<line x1="6" y1="32" x2="22" y2="32" stroke-width="2.2" opacity="0.35"/>' +
-    '<path d="M22 11l17 13-17 13z"/>' +
-    '</svg>',
-
-  'aiImpact:learning':
-    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M24 17c-3.4-2.3-10-3.3-16-2.2v21c6-1.1 12.6-.1 16 2.2 3.4-2.3 10-3.3 16-2.2v-21c-6-1.1-12.6-.1-16 2.2z"/>' +
-    '<line x1="24" y1="17" x2="24" y2="38" stroke-width="1.2" opacity="0.6"/>' +
-    '<line x1="12" y1="18" x2="19" y2="17.5" stroke-width="1.1" opacity="0.6"/><line x1="12" y1="24" x2="19" y2="23.5" stroke-width="1.1" opacity="0.6"/>' +
-    '<path d="M24 10V4M20 7.5l4-3.5 4 3.5" stroke-width="1.8"/>' +
-    '</svg>',
-
-  'aiImpact:changed':
-    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M12 20a12 12 0 0 1 20.5-8.5l3.5 3.5"/><path d="M36 8v7h-7"/>' +
-    '<path d="M36 28a12 12 0 0 1-20.5 8.5L12 33"/><path d="M12 40v-7h7"/>' +
-    '</svg>',
-
-  'aiImpact:worried':
-    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<circle cx="21" cy="24" r="15"/>' +
-    '<path d="M14.5 20c1-1.6 3.6-1.6 4.6 0M23.5 20.5c1.3-1.2 3.6-1.2 4.8 0" stroke-width="1.6"/>' +
-    '<path d="M14.5 32c2.3-3 4.8-4.3 6.5-4.3s4.2 1.3 6.5 4.3" stroke-width="1.8"/>' +
-    '<path d="M34 21c1.3 1.7 1.7 3.2 1.2 4.6-.4 1-1.5 1.4-2.2.7-.9-.9-.2-2.5 1-5.3z" stroke-width="1.3" opacity="0.8"/>' +
-    '</svg>',
-
-  'aiImpact:noDiff':
-    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-    '<circle cx="24" cy="9" r="5"/>' +
-    '<line x1="24" y1="14" x2="24" y2="24"/>' +
-    '<path d="M24 17c-6.5 0-11 3-13.5 8.5L7 30" stroke-width="1.8"/>' +
-    '<path d="M24 17c6.5 0 11 3 13.5 8.5L41 30" stroke-width="1.8"/>' +
-    '<line x1="16" y1="33" x2="16" y2="41"/><line x1="32" y1="33" x2="32" y2="41"/>' +
     '</svg>'
 };
 
@@ -517,6 +478,26 @@ export var STAT_ICONS = {
     '<polyline points="7 7 17 7 17 17"/>' +
     '</svg>'
 };
+
+// 第 10 題「AI 課金」：沿用第 4 題薪資的金幣堆疊線條風格，金額越高金幣堆越高
+OPTION_ICONS['aiSpend:none'] =
+    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="24" cy="24" r="12"/><circle cx="24" cy="24" r="8"/>' +
+    '<path d="M24 19v10M21 21.5c0-1.5 1.4-2.3 3-2.3s3.2.8 3.2 2.2-1.4 2-3.2 2.4c-1.8.4-3 1-3 2.3S21.6 28.5 24 28.5s3-1 3-1" stroke-width="1.3"/>' +
+    '<line x1="9" y1="39" x2="39" y2="9" stroke-width="2.2"/>' +
+    '</svg>';
+OPTION_ICONS['aiSpend:company'] =
+    '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M6 42V10l14-4v36"/><path d="M20 42V16l12 4v22"/>' +
+    '<line x1="4" y1="42" x2="44" y2="42"/>' +
+    '<path d="M10 14h5M10 20h5M10 26h5M10 32h5M24 24h4M24 30h4" stroke-width="1.4"/>' +
+    '<circle cx="37" cy="32" r="7"/><path d="M37 29v6" stroke-width="1.4"/>' +
+    '</svg>';
+OPTION_ICONS['aiSpend:under700'] = OPTION_ICONS['salary:under40'];
+OPTION_ICONS['aiSpend:700to2000'] = OPTION_ICONS['salary:40to60'];
+OPTION_ICONS['aiSpend:2000to5000'] = OPTION_ICONS['salary:60to80'];
+OPTION_ICONS['aiSpend:over5000'] = OPTION_ICONS['salary:over100'];
+
 
 export var UI_ICONS = {
   layers:

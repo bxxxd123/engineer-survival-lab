@@ -13,7 +13,7 @@ function baseAnswers(overrides) {
     careerBug: ['skill'],
     aiFrequency: 'sometimes',
     aiTools: ['chatgpt'],
-    aiImpact: 'noDiff',
+    aiSpend: 'none',
     aiFear: 'notScared',
     goal2027: 'remote'
   };
@@ -24,12 +24,15 @@ test('computeDimensions averages the relevant question values per dimension', fu
   var dims = computeDimensions(baseAnswers());
   assert.equal(dims.stability, 5);
   assert.equal(dims.radar, 1);
-  assert.equal(dims.aiAdapt, 3);
+  // aiSpend 'none' 刻意不計分（不因沒付錢扣分），所以 aiAdapt 只看
+  // aiFrequency(4) 和 aiTools(1 個工具 = 3)，平均 3.5 四捨五入為 4。
+  assert.equal(dims.aiAdapt, 4);
   assert.equal(dims.careerBugIndex, 2);
 });
 
 test('computeSurvivalIndex is the four-dimension average scaled to a percentage, with careerBugIndex inverted', function () {
-  assert.equal(computeSurvivalIndex(baseAnswers()), 65);
+  // (5 + 1 + 4 + (6 - 2)) / 4 = 3.5 → 70
+  assert.equal(computeSurvivalIndex(baseAnswers()), 70);
 });
 
 test('a high career-bug profile produces a high careerBugIndex that pulls survivalIndex down', function () {
@@ -40,7 +43,8 @@ test('a high career-bug profile produces a high careerBugIndex that pulls surviv
   });
   var dims = computeDimensions(answers);
   assert.equal(dims.careerBugIndex, 5);
-  assert.equal(computeSurvivalIndex(answers), 30);
+  // aiAdapt 同上為 4：(1 + 1 + 4 + (6 - 5)) / 4 = 1.75 → 35
+  assert.equal(computeSurvivalIndex(answers), 35);
 });
 
 test('computePersona picks stableGrowth for a content, low-radar profile', function () {
@@ -61,7 +65,7 @@ test('computePersona picks aiEvolved for a heavy multi-tool AI user', function (
   var persona = computePersona(baseAnswers({
     aiFrequency: 'daily',
     aiTools: ['chatgpt', 'claude', 'cursor'],
-    aiImpact: 'faster',
+    aiSpend: '700to2000',
     goal2027: 'switchToAI',
     careerBug: ['promotion']
   }));
@@ -85,7 +89,7 @@ test('職涯卡點選 3 個時，分數是平均而不是相加', function () {
   var base = {
     role: 'frontend', experience: '3to5', satisfaction: 'ok', salary: '60to80',
     headhunterReaction: 'peek', jumpThreshold: 'plus20', aiFrequency: 'sometimes',
-    aiTools: ['chatgpt'], aiImpact: 'faster', aiFear: 'notScared', goal2027: 'senior'
+    aiTools: ['chatgpt'], aiSpend: '700to2000', aiFear: 'notScared', goal2027: 'senior'
   };
   // salary 跟 boss 的 careerBugIndex 是 4 跟 5，平均 4.5，不是相加的 9
   var one = computeDimensions(Object.assign({}, base, { careerBug: ['boss'] }));
@@ -99,7 +103,7 @@ test('選 3 個卡點不會讓職涯Debug型輾壓其他類型', function () {
   var base = {
     role: 'frontend', experience: 'gt10', satisfaction: 'great', salary: 'over100',
     headhunterReaction: 'ignore', jumpThreshold: 'jobFit', aiFrequency: 'daily',
-    aiTools: ['chatgpt'], aiImpact: 'faster', aiFear: 'notScared', goal2027: 'remote'
+    aiTools: ['chatgpt'], aiSpend: '700to2000', aiFear: 'notScared', goal2027: 'remote'
   };
   // 這份作答每一題都指向穩定發育型，就算卡點選了三個偏 Debug 的也不該翻盤
   var persona = computePersona(Object.assign({}, base, {
