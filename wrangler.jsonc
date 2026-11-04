@@ -1,0 +1,9 @@
+// Cloudflare 部署設定：這是一個純靜態網站，整個資料夾就是網站內容，
+// 不需要建置步驟。哪些檔案不放上網站寫在 .assetsignore。
+{
+  "name": "engineer-survival-lab",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "."
+  }
+}

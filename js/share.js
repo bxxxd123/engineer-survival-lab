@@ -3,7 +3,7 @@
 // 底部放遊戲網址和 QR code，朋友只看到截圖也進得來。
 
 // 正式網址。換網域時，這裡跟 assets/brand/qr-game.png 都要一起換。
-export var GAME_URL = 'https://bxxxd123.github.io/engineer-survival-lab/';
+export var GAME_URL = 'https://hexschool-survival-lab.pages.dev/';
 
 var W = 1080;
 var PAD = 60;

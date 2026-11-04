@@ -14,15 +14,18 @@
 3. 瀏覽器打開 `http://localhost:8000` 就能看到網站了。
 4. 按 `Ctrl + C` 可以關掉這個本機伺服器。
 
-## 部署到 GitHub Pages
+## 部署（Cloudflare Pages）
 
-這個專案已經推上 GitHub 了，要讓它變成一個大家都能打開的公開網址，只需要：
+正式網址：https://hexschool-survival-lab.pages.dev/
 
-1. 打開這個 repo 在 GitHub 網頁上的頁面，點上方的「Settings」。
-2. 左邊選單點「Pages」。
-3. 在「Build and deployment」底下，「Source」選「Deploy from a branch」。
-4. Branch 選「main」，資料夾選「/ (root)」，按「Save」。
-5. 等 1–2 分鐘，網站就會上線，網址是 `https://<你的 GitHub 帳號>.github.io/<這個 repo 的名字>/`。
+Cloudflare Pages 已經連到這個 GitHub repo，**每次 `git push` 到 main，Cloudflare 會在 1–2 分鐘內自動更新網站**，不用另外操作。
+
+- Pages 建置設定：Framework preset `None`、Build command `npm run build`、Build output directory `dist`。
+- `npm run build` 只把網站需要的檔案（index.html、style.css、config.js、privacy-config.js、_headers、js/、assets/）複製到 `dist/`，原始大圖、Apps Script、測試、說明文件不會放上網站。
+- `_headers`：圖片在玩家手機暫存 1 天。
+- 換網址時，`js/share.js` 的 `GAME_URL` 和 `assets/brand/qr-game.png` 要一起換。
+
+舊網址 https://bxxxd123.github.io/engineer-survival-lab/ （GitHub Pages）目前仍保留，兩個網址的資料都送到同一份試算表。
 
 ## Google 試算表 + Apps Script 一次性設定（約 5 分鐘）
 

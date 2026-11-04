@@ -2,3 +2,5 @@
 tools/out/
 .claude/
 *.pdf
+.wrangler/
+dist/

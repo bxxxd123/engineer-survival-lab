@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build": "rm -rf dist && mkdir dist && cp -R index.html style.css config.js privacy-config.js _headers js assets dist/"
   }
 }
