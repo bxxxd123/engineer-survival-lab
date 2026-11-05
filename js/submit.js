@@ -52,6 +52,30 @@ export function submitFeedback(player, message, persona) {
   });
 }
 
+// ---------- 抽獎券兌換（要即時知道結果，所以不走「存手機、之後補送」） ----------
+
+// 這個 Email 兌換過了嗎？回傳 { status: 'ok', redeemed, at } 或 { status: 'error' }
+export function checkRedeemed(email) {
+  if (!GAS_WEB_APP_URL) return Promise.resolve({ status: 'ok', redeemed: false, at: '' });
+  return sendOnce('redeemCheck', { email: email })
+    .catch(function () { return sendOnce('redeemCheck', { email: email }); })
+    .catch(function (err) { return { status: 'error', message: String(err) }; });
+}
+
+// 工作人員確認兌換。回傳 { status: 'ok', result: 'redeemed' | 'already', at } 或 { status: 'error' }。
+// 試算表端用 Email 擋重複，所以重送一次也不會多記一筆。
+export function redeemTicket(player) {
+  var payload = { email: player.email || '', nickname: player.nickname || '', playId: player.playId || '' };
+  if (!GAS_WEB_APP_URL) {
+    var d = new Date();
+    var two = function (n) { return n < 10 ? '0' + n : String(n); };
+    return Promise.resolve({ status: 'ok', result: 'redeemed', at: two(d.getMonth() + 1) + '/' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()) });
+  }
+  return sendOnce('redeem', payload)
+    .catch(function () { return sendOnce('redeem', payload); })
+    .catch(function (err) { return { status: 'error', message: String(err) }; });
+}
+
 function sendOnce(sheetName, payload) {
   return fetch(GAS_WEB_APP_URL, {
     method: 'POST',

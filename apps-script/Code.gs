@@ -1,6 +1,7 @@
 var SHARED_SECRET = 'REPLACE_WITH_YOUR_OWN_SECRET';
 var RESPONSES_SHEET_NAME = '問卷回答';
 var LEADS_SHEET_NAME = '名單';
+var REDEEM_SHEET_NAME = '抽獎兌換';
 
 // 欄位依玩家填答的順序排列。分頁不存在會自動建立，第一列標題也會自動寫好。
 var RESPONSES_HEADERS = [
@@ -13,6 +14,8 @@ var LEADS_HEADERS = [
   '時間', '暱稱', 'Email', '個資告知同意', '告知版本', '同意時間',
   '行銷同意', '行銷同意時間', '建檔時間', '人設', '生存指數'
 ];
+// 抽獎券兌換：一個 Email 一列，用來防止同一個 Email 重複兌換
+var REDEEM_HEADERS = ['兌換時間', '暱稱', 'Email', '紀錄編號'];
 var FEEDBACK_COLUMN = RESPONSES_HEADERS.indexOf('意見回饋') + 1;
 var PLAY_ID_COLUMN = RESPONSES_HEADERS.indexOf('紀錄編號') + 1;
 
@@ -34,6 +37,10 @@ function doPost(e) {
       appendLead(ss, body.payload || {});
     } else if (body.sheet === 'feedback') {
       writeFeedback(ss, body.payload || {});
+    } else if (body.sheet === 'redeemCheck') {
+      return respond(checkRedeem(ss, body.payload || {}));
+    } else if (body.sheet === 'redeem') {
+      return respond(redeemTicket(ss, body.payload || {}));
     } else {
       return respond({ status: 'error', message: 'unknown sheet' });
     }
@@ -44,11 +51,12 @@ function doPost(e) {
   }
 }
 
-// 手動執行一次可以先把兩個分頁和標題建好（不執行也沒關係，第一筆資料進來時會自動建立）。
+// 手動執行一次可以先把三個分頁和標題建好（不執行也沒關係，第一筆資料進來時會自動建立）。
 function setupSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   getSheetWithHeaders(ss, RESPONSES_SHEET_NAME, RESPONSES_HEADERS);
   getSheetWithHeaders(ss, LEADS_SHEET_NAME, LEADS_HEADERS);
+  getSheetWithHeaders(ss, REDEEM_SHEET_NAME, REDEEM_HEADERS);
 }
 
 // Returns the tab, creating it and/or writing the header row when needed.
@@ -126,6 +134,52 @@ function findRowByPlayId(sheet, playId) {
     .matchEntireCell(true)
     .findNext();
   return cell ? cell.getRow() : 0;
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function formatRedeemTime(date) {
+  return Utilities.formatDate(date, 'Asia/Taipei', 'MM/dd HH:mm');
+}
+
+// 回傳這個 Email 的兌換時間；沒兌換過回傳空字串
+function findRedeemTime(sheet, email) {
+  if (!email || sheet.getLastRow() < 2) return '';
+  var cell = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1)
+    .createTextFinder(email)
+    .matchEntireCell(true)
+    .matchCase(false)
+    .findNext();
+  if (!cell) return '';
+  var when = sheet.getRange(cell.getRow(), 1).getValue();
+  return when instanceof Date ? formatRedeemTime(when) : String(when);
+}
+
+// 任務完成頁一打開就查：這個 Email 兌換過了嗎？
+function checkRedeem(ss, payload) {
+  var sheet = getSheetWithHeaders(ss, REDEEM_SHEET_NAME, REDEEM_HEADERS);
+  var at = findRedeemTime(sheet, normalizeEmail(payload.email));
+  return { status: 'ok', redeemed: Boolean(at), at: at };
+}
+
+// 工作人員長按確認後兌換；同一個 Email 已兌換過就不再記錄
+function redeemTicket(ss, payload) {
+  var email = normalizeEmail(payload.email);
+  if (!email) return { status: 'error', message: 'missing email' };
+  var sheet = getSheetWithHeaders(ss, REDEEM_SHEET_NAME, REDEEM_HEADERS);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var already = findRedeemTime(sheet, email);
+    if (already) return { status: 'ok', result: 'already', at: already };
+    var now = new Date();
+    sheet.appendRow([now, safeCell(payload.nickname), safeCell(email), safeCell(payload.playId)]);
+    return { status: 'ok', result: 'redeemed', at: formatRedeemTime(now) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function appendLead(ss, payload) {

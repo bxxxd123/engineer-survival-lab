@@ -2,10 +2,10 @@ import { QUESTIONS } from './questions.js';
 import { PERSONAS } from './results.js';
 import { computeDimensions, computeSurvivalIndex, computePersona } from './scoring.js';
 import { createInitialState, recordSingleAnswer, toggleMultiAnswer, isLastLevel, advanceLevel, goBackLevel, recordRegistration, validateRegistration } from './state.js';
-import { renderIntro, renderLevel, renderCalculating, renderResult, renderShareSheet, renderDone } from './render.js';
+import { renderIntro, renderLevel, renderCalculating, renderResult, renderShareSheet, renderDone, renderStaffDialog } from './render.js';
 import { exportResultCardImage, canvasToBlob, shareCard, downloadCard, copyGameLink, shareLinkUrl, canNativeShare, GAME_URL } from './share.js';
 import { saveProgress, loadProgress, clearProgress, vibrate } from './progress.js';
-import { submitResponse, submitLead, submitFeedback, flushOutbox } from './submit.js';
+import { submitResponse, submitLead, submitFeedback, flushOutbox, checkRedeemed, redeemTicket } from './submit.js';
 import { recommendCourse, COURSES } from './courses.js';
 
 var SINGLE_SELECT_FIELDS = [
@@ -15,6 +15,8 @@ var SINGLE_SELECT_FIELDS = [
 
 var root = document.getElementById('app');
 var state = createInitialState();
+// 任務完成頁的畫面控制，用來在查詢／兌換結果回來時直接蓋上戳記
+var doneView = null;
 
 function rerender() {
   if (state.screen === 'level' || state.screen === 'result') {
@@ -45,8 +47,10 @@ function rerender() {
   } else if (state.screen === 'result') {
     renderResult(root, buildResultData(), { onShare: handleOpenShare, onRestart: handleRestart });
   } else if (state.screen === 'done') {
-    renderDone(root, buildResultData(), {
+    doneView = renderDone(root, buildResultData(), {
       hasError: state.hasSubmitError,
+      redeem: state.redeem,
+      onStaffHold: handleStaffHold,
       onFeedback: handleFeedback,
       onRestart: handleRestart
     });
@@ -281,9 +285,62 @@ function completeMission(sheet, delay) {
     clearProgress();
     vibrate([60, 40, 120]);
     state.screen = 'done';
+    state.redeem = { status: 'checking', at: '' };
     rerender();
     window.scrollTo(0, 0);
+    checkRedeemStatus();
   }, delay || 0);
+}
+
+// ---------- 抽獎券兌換 ----------
+
+// 任務完成頁一打開就查這個 Email 兌換過沒；兌換過就直接蓋上戳記
+function checkRedeemStatus() {
+  state.redeem = { status: 'checking', at: '' };
+  checkRedeemed(state.email).then(function (res) {
+    if (res.status !== 'ok') {
+      state.redeem = { status: 'error', at: '' };
+    } else if (res.redeemed) {
+      state.redeem = { status: 'redeemed', at: res.at };
+      if (doneView) doneView.showRedeemed(res.at, true);
+    } else {
+      state.redeem = { status: 'ready', at: '' };
+    }
+  });
+}
+
+// 工作人員長按完成任務章 1 秒
+function handleStaffHold() {
+  vibrate(30);
+  var redeem = state.redeem || { status: 'checking' };
+  var info = { nickname: state.nickname, at: redeem.at };
+  if (redeem.status === 'redeemed') {
+    renderStaffDialog('already', info, {});
+  } else if (redeem.status === 'error') {
+    renderStaffDialog('error', info, { onRetry: checkRedeemStatus });
+  } else if (redeem.status === 'ready') {
+    renderStaffDialog('ready', info, { onConfirm: confirmRedeem });
+  } else {
+    renderStaffDialog('checking', info, {});
+  }
+}
+
+function confirmRedeem() {
+  state.redeem = { status: 'checking', at: '' };
+  redeemTicket({ email: state.email, nickname: state.nickname, playId: state.playId }).then(function (res) {
+    if (res.status !== 'ok') {
+      state.redeem = { status: 'error', at: '' };
+      renderStaffDialog('error', { nickname: state.nickname }, { onRetry: checkRedeemStatus });
+      return;
+    }
+    state.redeem = { status: 'redeemed', at: res.at };
+    if (doneView) doneView.showRedeemed(res.at, true);
+    if (res.result === 'already') {
+      renderStaffDialog('already', { nickname: state.nickname, at: res.at }, {});
+    } else {
+      vibrate([60, 40, 120]);
+    }
+  });
 }
 
 function handleFeedback(message) {

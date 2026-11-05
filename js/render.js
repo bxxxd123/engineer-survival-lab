@@ -1162,6 +1162,11 @@ export function renderShareSheet(host, options) {
 
 // ---------- 任務完成 ----------
 
+// 任務完成頁。抽獎券兌換是藏起來的：工作人員長按「完成任務」章 1 秒，
+// 才會跳出兌換確認。回傳 showRedeemed()，讓查詢／兌換結果回來時直接蓋上
+// 「已兌換」戳記，不用重畫整頁（玩家可能正在打留言）。
+var STAFF_HOLD_MS = 1000;
+
 export function renderDone(root, data, options) {
   root.innerHTML = '';
   var screen = createEl('div', 'screen screen--done');
@@ -1181,18 +1186,31 @@ export function renderDone(root, data, options) {
   mascot.alt = '';
   stage.appendChild(mascot);
   var stamp = createEl('div', 'done-stamp');
+  stamp.setAttribute('role', 'img');
+  stamp.setAttribute('aria-label', '完成任務');
   var stampEn = createEl('span', 'done-stamp-en');
   stampEn.textContent = 'MISSION COMPLETE';
   var stampZh = createEl('span', 'done-stamp-zh');
   stampZh.textContent = '完成任務';
-  stamp.appendChild(stampEn);
-  stamp.appendChild(stampZh);
+  // 防截圖：秒數會跳、紅點會閃，截圖就是靜止的
+  var stampLive = createEl('span', 'done-stamp-live');
+  var stampHold = createEl('span', 'done-stamp-hold');
+  stampHold.setAttribute('aria-hidden', 'true');
+  [stampEn, stampZh, stampLive, stampHold].forEach(function (el) { stamp.appendChild(el); });
   stage.appendChild(stamp);
   screen.appendChild(stage);
 
-  var who = createEl('p', 'done-who');
-  who.textContent = data.nickname + '・' + data.persona.name;
-  screen.appendChild(who);
+  startLiveClock(stampLive);
+  attachLongPress(stamp, STAFF_HOLD_MS, options.onStaffHold);
+
+  var hint = createEl('div', 'redeem-hint');
+  var hintName = createEl('p', 'redeem-hint-name');
+  hintName.textContent = data.nickname;
+  var hintText = createEl('p', 'redeem-hint-text');
+  hintText.textContent = '出示此畫面兌換抽獎券・限一人一次・截圖無效';
+  hint.appendChild(hintName);
+  hint.appendChild(hintText);
+  screen.appendChild(hint);
 
   screen.appendChild(buildCourseCard(data.course, '下一步，推薦你這門課'));
   screen.appendChild(buildFeedbackBox(options.onFeedback));
@@ -1204,6 +1222,145 @@ export function renderDone(root, data, options) {
   screen.appendChild(restartBtn);
 
   root.appendChild(screen);
+
+  function showRedeemed(at, animate) {
+    var old = stage.querySelector('.redeemed-mark');
+    if (old) old.remove();
+    stage.appendChild(buildRedeemedMark(at, animate));
+  }
+  if (options.redeem && options.redeem.status === 'redeemed') {
+    showRedeemed(options.redeem.at, false);
+  }
+  return { showRedeemed: showRedeemed };
+}
+
+var liveClockTimer = null;
+
+function startLiveClock(el) {
+  clearInterval(liveClockTimer);
+  function tick() {
+    if (!el.isConnected) { clearInterval(liveClockTimer); return; }
+    var d = new Date();
+    el.textContent = pad2(d.getMonth() + 1) + '/' + pad2(d.getDate()) + ' ' +
+      pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+  }
+  tick();
+  liveClockTimer = setInterval(tick, 1000);
+}
+
+// 長按 ms 毫秒才觸發；按住時章底部的進度條會填滿，放開就取消
+function attachLongPress(el, ms, onDone) {
+  var start = 0;
+  var frame = 0;
+  function cancel() {
+    cancelAnimationFrame(frame);
+    start = 0;
+    el.style.setProperty('--hold', 0);
+  }
+  function step() {
+    var p = Math.min(1, (Date.now() - start) / ms);
+    el.style.setProperty('--hold', p);
+    if (p >= 1) {
+      cancel();
+      onDone();
+      return;
+    }
+    frame = requestAnimationFrame(step);
+  }
+  el.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    start = Date.now();
+    frame = requestAnimationFrame(step);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (type) {
+    el.addEventListener(type, cancel);
+  });
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+
+// 已兌換：紅色準星＋彈孔＋斜蓋的「已兌換抽獎券」章
+function buildRedeemedMark(at, animate) {
+  var mark = createEl('div', 'redeemed-mark' + (animate ? ' redeemed-mark--animate' : ''));
+  mark.setAttribute('role', 'img');
+  mark.setAttribute('aria-label', '已兌換抽獎券 ' + at);
+  var reticle = createEl('span', 'redeemed-reticle');
+  reticle.innerHTML =
+    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">' +
+    '<circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="3" fill="currentColor"/>' +
+    '<path d="M32 2v14M32 48v14M2 32h14M48 32h14"/></svg>';
+  var bullet = createEl('span', 'redeemed-bullet');
+  var seal = createEl('span', 'redeemed-seal');
+  var sealZh = createEl('span', 'redeemed-seal-zh');
+  sealZh.textContent = '已兌換抽獎券';
+  var sealTime = createEl('span', 'redeemed-seal-time');
+  sealTime.textContent = at;
+  seal.appendChild(sealZh);
+  seal.appendChild(sealTime);
+  [reticle, bullet, seal].forEach(function (el) { mark.appendChild(el); });
+  return mark;
+}
+
+// 工作人員確認視窗。kind：checking / ready / already / error
+export function renderStaffDialog(kind, info, handlers) {
+  var overlay = createEl('div', 'share-overlay');
+  var sheet = createEl('div', 'share-sheet staff-sheet');
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-modal', 'true');
+  var tag = createEl('p', 'hud-tag');
+  tag.textContent = 'STAFF ONLY';
+  sheet.appendChild(tag);
+
+  var text = createEl('p', 'staff-text');
+  var actions = createEl('div', 'staff-actions');
+
+  function close() {
+    overlay.remove();
+    document.body.classList.remove('notice-open');
+  }
+  function button(className, label, onClick) {
+    var btn = createEl('button', className);
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.addEventListener('click', function () { close(); if (onClick) onClick(); });
+    actions.appendChild(btn);
+    return btn;
+  }
+
+  if (kind === 'ready') {
+    text.appendChild(document.createTextNode('確定要發放抽獎券給'));
+    text.appendChild(createEl('br'));
+    var who = createEl('strong');
+    who.textContent = info.nickname;
+    text.appendChild(who);
+    text.appendChild(document.createTextNode(' 嗎？'));
+    sheet.appendChild(text);
+    var warn = createEl('p', 'staff-note');
+    warn.textContent = '兌換後，同一個 Email 就不能再兌換';
+    sheet.appendChild(warn);
+    button('btn-amber', '確認兌換', handlers.onConfirm);
+    button('btn-text', '取消');
+  } else if (kind === 'already') {
+    text.className = 'staff-text staff-text--danger';
+    text.textContent = '⚠ 此 Email 已於 ' + info.at + ' 兌換過抽獎券，請勿重複發放';
+    sheet.appendChild(text);
+    button('btn-text', '關閉');
+  } else if (kind === 'error') {
+    text.className = 'staff-text staff-text--danger';
+    text.textContent = '連線失敗，無法確認兌換紀錄。請稍後重試，或改用紙本登記。';
+    sheet.appendChild(text);
+    button('btn-amber', '重新確認', handlers.onRetry);
+    button('btn-text', '關閉');
+  } else {
+    text.textContent = '兌換紀錄確認中，請稍候再長按一次';
+    sheet.appendChild(text);
+    button('btn-text', '關閉');
+  }
+  sheet.appendChild(actions);
+
+  overlay.appendChild(sheet);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.body.appendChild(overlay);
+  document.body.classList.add('notice-open');
 }
 
 function buildFeedbackBox(onFeedback) {

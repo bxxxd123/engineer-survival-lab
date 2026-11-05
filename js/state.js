@@ -13,6 +13,8 @@ export function createInitialState() {
     dimensions: null,
     isAdvancing: false,
     playId: '',
+    // 抽獎券兌換狀態：checking / ready / redeemed / error，at 是兌換時間
+    redeem: null,
     hasSubmitted: false,
     hasSubmitError: false
   };
